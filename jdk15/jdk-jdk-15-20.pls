@@ -36,3 +36,5 @@
 -p0 jdk-jdk-15-20/tribblix-demangle2.patch
 -p0 jdk-jdk-15-20/tribblix-demangle3.patch
 -p0 jdk-jdk-15-20/tribblix-demangle4.patch
+-p1 jdk-jdk-15-20/tribblix-sparc1.patch
+-p2 jdk-jdk-15-20/tribblix-sparc2.patch
