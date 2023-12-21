@@ -39,3 +39,4 @@
 -p1 jdk-jdk-15-23/tribblix-main-23.patch
 -p1 jdk-jdk-15-23/tribblix-sparc1.patch
 -p1 jdk-jdk-15-23/tribblix-sparc2.patch
+-p1 jdk-jdk-15-23/tribblix-sparc3.patch

@@ -36,5 +36,6 @@
 -p0 jdk-jdk-15-24/tribblix-demangle2.patch
 -p0 jdk-jdk-15-24/tribblix-demangle3.patch
 -p0 jdk-jdk-15-24/tribblix-demangle4.patch
+-p1 jdk-jdk-15-24/tribblix-sparc3.patch
 -p1 jdk-jdk-15-24/restore_cpu_sparc.patch
 -p1 jdk-jdk-15-24/restore_os_cpu_solaris_sparc.patch
