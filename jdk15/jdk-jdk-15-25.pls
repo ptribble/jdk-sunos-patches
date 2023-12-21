@@ -44,3 +44,5 @@
 -p1 jdk-jdk-15-25/illumos-port-5.patch
 -p1 jdk-jdk-15-25/illumos-port-6.patch
 -p1 jdk-jdk-15-25/illumos-port-7.patch
+-p1 jdk-jdk-15-25/restore_cpu_sparc.patch
+-p1 jdk-jdk-15-25/restore_os_cpu_solaris_sparc.patch
