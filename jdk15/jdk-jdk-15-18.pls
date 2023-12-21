@@ -33,4 +33,4 @@
 -p0 jdk-jdk-15-18/tribblix-flags-ldflags2.patch
 -p0 jdk-jdk-15-18/tribblix-wait.patch
 -p1 jdk-jdk-15-18/tribblix-sparc1.patch
--p2 jdk-jdk-15-18/tribblix-sparc2.patch
+-p1 jdk-jdk-15-18/tribblix-sparc2.patch
