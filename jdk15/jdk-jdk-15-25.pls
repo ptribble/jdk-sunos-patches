@@ -47,3 +47,4 @@
 -p1 jdk-jdk-15-25/tribblix-sparc3.patch
 -p1 jdk-jdk-15-25/restore_cpu_sparc.patch
 -p1 jdk-jdk-15-25/restore_os_cpu_solaris_sparc.patch
+-p1 jdk-jdk-15-25/stack_bias.25.patch
