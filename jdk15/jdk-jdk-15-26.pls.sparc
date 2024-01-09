@@ -1,0 +1,9 @@
+-p1 jdk-jdk-15-26/restore_cpu_sparc.patch
+-p1 jdk-jdk-15-26/restore_os_cpu_solaris_sparc.patch
+-p1 jdk-jdk-15-26/sparc-bitness.patch
+-p1 jdk-jdk-15-26/TemplateInterpreterGenerator-sparc.patch
+-p1 jdk-jdk-15-26/c1-sparc.patch
+-p1 jdk-jdk-15-26/jfr-sparc.patch
+-p1 jdk-jdk-15-26/memset-sparc.patch
+-p1 jdk-jdk-15-26/stack_bias.25.patch
+-p1 jdk-jdk-15-26/sparc-misc.patch
