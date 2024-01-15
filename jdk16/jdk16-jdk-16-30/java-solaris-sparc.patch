@@ -11417,7 +11417,7 @@
 -
 -// "default" initializers for missing libc APIs
 -extern "C" {
--  int memcntl(caddr_t, size_t, int, caddr_t, int, int);
+-  int memcntl(void *, size_t, int, void *, int, int);
 -  int meminfo(const uint64_t *, int, const uint_t *, int, uint64_t *, uint_t *);
 -}
 -
