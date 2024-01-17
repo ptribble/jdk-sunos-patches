@@ -377,13 +377,6 @@ diff -ur a/src/hotspot/share/c1/c1_LIRGenerator.cpp b/src/hotspot/share/c1/c1_LI
 diff -ur a/src/hotspot/share/c1/c1_LinearScan.cpp b/src/hotspot/share/c1/c1_LinearScan.cpp
 --- a/src/hotspot/share/c1/c1_LinearScan.cpp	   :: 
 +++ b/src/hotspot/share/c1/c1_LinearScan.cpp	   :: 
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2005, 2020, Oracle and/or its affiliates. All rights reserved.
-+ * Copyright (c) 2005, 2019, Oracle and/or its affiliates. All rights reserved.
-  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-  *
-  * This code is free software; you can redistribute it and/or modify it
 @@ -2129,11 +2129,11 @@
  #ifdef _LP64
          return LIR_OprFact::double_cpu(assigned_reg, assigned_reg);
