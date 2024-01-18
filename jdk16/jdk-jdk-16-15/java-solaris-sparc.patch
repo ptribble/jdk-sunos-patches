@@ -10463,7 +10463,7 @@
 -}
 --- old/src/hotspot/os/solaris/globals_solaris.hpp	2020-05-20 18:09:31.185040905 -0700
 +++ /dev/null	2020-03-09 18:57:19.455001459 -0700
-@@ -1,51 +0,0 @@
+@@ -1,53 +0,0 @@
 -/*
 - * Copyright (c) 2005, 2020, Oracle and/or its affiliates. All rights reserved.
 - * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -10498,6 +10498,8 @@
 -                         develop_pd, \
 -                         product, \
 -                         product_pd, \
+-                         diagnostic, \
+-                         diagnostic_pd, \
 -                         notproduct, \
 -                         range, \
 -                         constraint) \
