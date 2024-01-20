@@ -56,7 +56,7 @@ One of the spec.gmk,in hunks failed, just delete it
 
 In 16+20
 
-Mostly the stack overflow handlingg rorg
+Mostly the stack overflow handling reorg
 8254158: Consolidate per-platform stack overflow handling code
 https://github.com/openjdk/jdk/commit/ba5dc67a
 covered by illumos-port-9.patch, although ideally we would merge

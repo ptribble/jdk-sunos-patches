@@ -18,7 +18,7 @@ The boolAtPut flag stuff is no more. The whole JVMFlag machinery has
 been reworked. Renamed to set_bool.
 
 Remove patching of JvmOverrideFiles.gmk when we then disable the
-patche later.
+patch later.
 
 17-17
 

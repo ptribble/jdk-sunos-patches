@@ -5,7 +5,7 @@ See also README-zero.txt for patches to build a project zero variant.
 
 Most patches -p0
 
-JDK19 now foked off for rampdown phase 1
+JDK19 now forked off for rampdown phase 1
 
 19-26
 
@@ -121,7 +121,7 @@ Removed the INCLUDE_NMT patch for init.cpp
 Needed to restore src/hotspot/share/services/dtraceAttacher.hpp
 See illumos-port-17.patch.
 This file should have been removed in the original solaris
-deprecation along with the corresponding cpp file, but was forgoteen
+deprecation along with the corresponding cpp file, but was forgotten
 about, and has recently been cleaned up. As we still #include it, we
 need to put it back. As we disable DTrace in any case, it would be
 cleaner to simply remove all of it.
