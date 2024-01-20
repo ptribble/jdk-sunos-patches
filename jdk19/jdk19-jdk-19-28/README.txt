@@ -73,7 +73,7 @@ This includes Project Loom aka virtual threads.
 
 New DefaultPollerProvider; create a DevPollPoller stub that throws 
 UnsupportedOperationException similar to the way that the AIX
-implementation does. This is enought to make the code compile, and
+implementation does. This is enough to make the code compile, and
 things like jkstat work, but jshell doesn't present a prompt (it was
 fine in 19+21). So this will need a working implementation to fix
 jshell and Loom.
@@ -91,7 +91,7 @@ Remove local os::pause() is it's centralized
 
 SafeFetch handling completely reworked. Remove it from
 src/hotspot/os_cpu/solaris_x86/os_solaris_x86.cpp, and copy
-the assember from the linux x86_64 implementation (as we are the same
+the assembler from the linux x86_64 implementation (as we are the same
 toolchain and cpu that seems the obvious choice)
 Removed illumos-port-13.patch as it's now irrelevant
 

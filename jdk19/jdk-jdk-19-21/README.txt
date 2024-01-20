@@ -20,7 +20,7 @@ Remove local os::pause() is it's centralized
 
 SafeFetch handling completely reworked. Remove it from
 src/hotspot/os_cpu/solaris_x86/os_solaris_x86.cpp, and copy
-the assember from the linux x86_64 implementation (as we are the same
+the assembler from the linux x86_64 implementation (as we are the same
 toolchain and cpu that seems the obvious choice)
 Removed illumos-port-13.patch as it's now irrelevant
 

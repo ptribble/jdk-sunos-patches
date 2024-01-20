@@ -7,7 +7,7 @@ Most patches -p0
 
 JDK16:
 
-One of the reasons for removing SPARC/Solaris suport was to allow more
+One of the reasons for removing SPARC/Solaris support was to allow more
 radical changes to the codebase. That means it's likely to be more
 difficult to track changes.
 
