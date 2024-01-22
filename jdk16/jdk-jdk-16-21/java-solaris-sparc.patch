@@ -2045,7 +2045,7 @@
 +  size_t os_min_stack_allowed = PTHREAD_STACK_MIN;
  
    _java_thread_min_stack_allowed = _java_thread_min_stack_allowed +
-                                    JavaThread::stack_guard_zone_size() +
+                                    StackOverflow::stack_guard_zone_size() +
 @@ -1007,8 +1001,7 @@
    if ((status = pthread_mutexattr_settype(_mutexAttr, PTHREAD_MUTEX_NORMAL)) != 0) {
      fatal("pthread_mutexattr_settype: %s", os::strerror(status));
