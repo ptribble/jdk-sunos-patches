@@ -61,6 +61,6 @@
 -p1 jdk8u-jdk8u382-ga/patch-jdk_test_sun_security_ec_TestEC.java.patch
 -p1 jdk8u-jdk8u382-ga/patch-pkcs11.patch
 -p1 jdk8u-jdk8u382-ga/illumos-port-6.patch
--p1 openjdk11/tribblix-sparc1.patch
--p1 openjdk11/tribblix-sparc2.patch
--p1 openjdk11/tribblix-sparc3.patch
+-p1 jdk8u-jdk8u382-ga/tribblix-sparc1.patch
+-p1 jdk8u-jdk8u382-ga/tribblix-sparc2.patch
+-p1 jdk8u-jdk8u382-ga/tribblix-sparc3.patch
