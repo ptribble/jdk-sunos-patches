@@ -78,3 +78,23 @@ Eventually narrowed down to
 src/hotspot/cpu/sparc/macroAssembler_sparc.cpp, and the simplest and
 correct fix is to change the type of encoded_k from narrowOop to
 uint32_t
+
+Move interpreter_frame_initial_sp_offset from frame_sparc.cpp to the
+enum containing interpreter_frame_vm_local_words in frame_sparc.hpp,
+otherwise you get
+error: 'interpreter_frame_initial_sp_offset' is not a member of 'frame'
+
+In relocInfo_sparc.cpp
+CompressedOops::encode((oop)x)
+should be
+CompressedOops::narrow_oop_value((oop)x)
+
+Removed the count_calls() function from templateTable_sparc.cpp, it
+has no callers and generates an error as it's not declared.
+
+There were call_VM() calls to InterpreterRuntime::monitorexit that
+were causing a SIGSEGV. The signature of monitorexit had been changed
+to remove an initial Thread argument. The problem here is that
+call_VM() dynamically generates the call, and automatically adds a
+Thread argument for you. Using call_VM_leaf() doesn't do so, so change
+to using that instead.
