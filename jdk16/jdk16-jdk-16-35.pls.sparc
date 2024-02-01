@@ -1,0 +1,13 @@
+-p1+-R jdk16-jdk-16-35/0011-8256238-Remove-Matcher-pass_original_key_for_aes.patch 
+-p1+-R jdk16-jdk-16-35/0048-8256205-Simplify-compiler-calling-convention-handlin.patch 
+-p1 jdk16-jdk-16-35/restore_cpu_sparc.patch
+-p1 jdk16-jdk-16-35/restore_os_cpu_solaris_sparc.patch
+-p1 jdk16-jdk-16-35/sparc-bitness.patch
+-p1 jdk16-jdk-16-35/TemplateInterpreterGenerator-sparc.patch
+-p1 jdk16-jdk-16-35/c1-sparc.patch
+-p1 jdk16-jdk-16-35/jfr-sparc.patch
+-p1 jdk16-jdk-16-35/memset-sparc.patch
+-p1 jdk16-jdk-16-35/stack_bias.25.patch
+-p1 jdk16-jdk-16-35/sparc-misc.patch
+-p1 jdk16-jdk-16-35/assembler-hpp.patch
+-p1 jdk16-jdk-16-35/8254231-for-sparc.patch
