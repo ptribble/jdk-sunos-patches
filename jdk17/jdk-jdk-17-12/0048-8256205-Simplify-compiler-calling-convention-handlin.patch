@@ -52,7 +52,7 @@ diff --git a/src/hotspot/cpu/aarch64/aarch64.ad b/src/hotspot/cpu/aarch64/aarch6
 index a9df812c634..2ec3d26ac81 100644
 --- a/src/hotspot/cpu/aarch64/aarch64.ad
 +++ b/src/hotspot/cpu/aarch64/aarch64.ad
-@@ -4118,13 +4118,6 @@ frame %{
+@@ -4113,13 +4113,6 @@ frame %{
    // Stack alignment requirement
    stack_alignment(StackAlignmentInBytes); // Alignment size in bytes (128-bit -> 16 bytes)
  
@@ -66,7 +66,7 @@ index a9df812c634..2ec3d26ac81 100644
    // Number of outgoing stack slots killed above the out_preserve_stack_slots
    // for calls to C.  Supports the var-args backing area for register parms.
    varargs_C_out_slots_killed(frame::arg_reg_save_area_bytes/BytesPerInt);
-@@ -4143,25 +4136,6 @@ frame %{
+@@ -4138,25 +4131,6 @@ frame %{
                          Compile::current()->fixed_slots()),
                         stack_alignment_in_slots()));
  
@@ -152,7 +152,7 @@ diff --git a/src/hotspot/cpu/arm/arm.ad b/src/hotspot/cpu/arm/arm.ad
 index 7ea64d1d1ac..1c23d72e0af 100644
 --- a/src/hotspot/cpu/arm/arm.ad
 +++ b/src/hotspot/cpu/arm/arm.ad
-@@ -1682,12 +1682,6 @@ frame %{
+@@ -1677,12 +1677,6 @@ frame %{
    //  LP64: Alignment size in bytes (128-bit -> 16 bytes)
    // !LP64: Alignment size in bytes (64-bit  ->  8 bytes)
  
@@ -165,7 +165,7 @@ index 7ea64d1d1ac..1c23d72e0af 100644
    // Number of outgoing stack slots killed above the out_preserve_stack_slots
    // for calls to C.  Supports the var-args backing area for register parms.
    // ADLC doesn't support parsing expressions, so I folded the math by hand.
-@@ -1704,22 +1698,6 @@ frame %{
+@@ -1699,22 +1693,6 @@ frame %{
                          Compile::current()->fixed_slots()),
                         stack_alignment_in_slots()));
  
@@ -244,7 +244,7 @@ diff --git a/src/hotspot/cpu/ppc/ppc.ad b/src/hotspot/cpu/ppc/ppc.ad
 index 27dad6cff94..8bbbc3d4aa3 100644
 --- a/src/hotspot/cpu/ppc/ppc.ad
 +++ b/src/hotspot/cpu/ppc/ppc.ad
-@@ -3842,8 +3842,6 @@ frame %{
+@@ -3837,8 +3837,6 @@ frame %{
  
    stack_alignment(frame::alignment_in_bytes);
  
@@ -253,7 +253,7 @@ index 27dad6cff94..8bbbc3d4aa3 100644
    // Number of outgoing stack slots killed above the
    // out_preserve_stack_slots for calls to C. Supports the var-args
    // backing area for register parms.
-@@ -3868,40 +3866,6 @@ frame %{
+@@ -3863,40 +3861,6 @@ frame %{
    //    4 what apparently works and saves us some spills.
    return_addr(STACK 4);
  
@@ -323,7 +323,7 @@ diff --git a/src/hotspot/cpu/s390/s390.ad b/src/hotspot/cpu/s390/s390.ad
 index 98194c73047..9a574ac0854 100644
 --- a/src/hotspot/cpu/s390/s390.ad
 +++ b/src/hotspot/cpu/s390/s390.ad
-@@ -2465,8 +2465,6 @@ frame %{
+@@ -2460,8 +2460,6 @@ frame %{
    // Use alignment_in_bytes instead of log_2_of_alignment_in_bits.
    stack_alignment(frame::alignment_in_bytes);
  
@@ -332,7 +332,7 @@ index 98194c73047..9a574ac0854 100644
    // A `slot' is assumed 4 bytes here!
    // out_preserve_stack_slots(frame::jit_out_preserve_size_in_4_byte_units);
  
-@@ -2481,38 +2479,6 @@ frame %{
+@@ -2476,38 +2474,6 @@ frame %{
    // stack slot.
    return_addr(REG Z_R14);
  
@@ -921,7 +921,7 @@ diff --git a/src/hotspot/share/opto/matcher.hpp b/src/hotspot/share/opto/matcher
 index 285f33d8e93..6616a9e972b 100644
 --- a/src/hotspot/share/opto/matcher.hpp
 +++ b/src/hotspot/share/opto/matcher.hpp
-@@ -376,20 +376,16 @@ public:
+@@ -373,20 +373,16 @@ public:
      return stack_alignment_in_bytes() / (VMRegImpl::stack_slot_size);
    }
  
@@ -946,7 +946,7 @@ index 285f33d8e93..6616a9e972b 100644
    RegMask                     _return_value_mask;
    // Inline Cache Register
    static OptoReg::Name  inline_cache_reg();
-@@ -427,9 +423,6 @@ public:
+@@ -424,9 +420,6 @@ public:
    // Java-Native calling convention
    // (what you use when intercalling between Java and C++ code)
  
