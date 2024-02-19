@@ -6,6 +6,5 @@ env PATH=/usr/bin:/usr/sbin:/usr/sfw/bin:/usr/gnu/bin bash ./configure \
 --disable-dtrace \
 --disable-warnings-as-errors \
 --enable-deprecated-ports=yes \
---with-jobs=3
 
 env PATH=/usr/bin:/usr/sbin:/usr/sfw/bin:/usr/gnu/bin gmake all

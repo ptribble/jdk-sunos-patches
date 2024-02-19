@@ -6,7 +6,6 @@ env PATH=/usr/bin:/usr/sbin:/usr/sfw/bin:/usr/gnu/bin bash ./configure \
 --disable-dtrace \
 --disable-warnings-as-errors \
 --with-source-date=current \
---with-jobs=3 \
 DATE=/usr/gnu/bin/date \
 STRIP=/usr/gnu/bin/strip
 
