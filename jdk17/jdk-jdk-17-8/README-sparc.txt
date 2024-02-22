@@ -44,7 +44,7 @@ src/hotspot/os_cpu/solaris_sparc/os_solaris_sparc.cpp
 There was also some SystemDictionary cleanup:
 
 Remove #include "classfile/systemDictionary.hpp" from
-c1_macroassebler_sparc.cpp runtime_sparc.cpp
+c1_MacroAssembler_sparc.cpp runtime_sparc.cpp
 
 Add #include "classfile/vmClasses.hpp" to
 methodHandles_sparc.cpp

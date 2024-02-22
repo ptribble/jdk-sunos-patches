@@ -16,6 +16,6 @@ cpu/s390 and ppc remove delayed_value_impl(), we don't use it so
 remove on sparc too
 
 The UseRDPCForConstantTableBase flag was removed. This is related to
-UseBlockZeroing, and the zero_aligned_words() function which has alsoe
+UseBlockZeroing, and the zero_aligned_words() function which has also
 been removed. Simply remove code that checks for these, taking the
 default branch.

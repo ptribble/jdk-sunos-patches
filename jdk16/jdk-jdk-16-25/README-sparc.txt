@@ -34,5 +34,5 @@ There's a new function LIRGenerator::do_getObjectSize(), added the
 type argument to the branch call there.
 
 In sparc.ad, added castLL. This was added in all other cpus, and in
-every case is the same as castII with I replaceed by L, so do the same
+every case is the same as castII with I replaced by L, so do the same
 here.

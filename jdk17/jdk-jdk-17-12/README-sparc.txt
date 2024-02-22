@@ -18,5 +18,5 @@ Cleanup:
 
 Revised 0011-8256238-Remove-Matcher-pass_original_key_for_aes.patch,
 remove the runtime logic of "if (Matcher::pass_original_key_for_aes())" 
-and use an "#ifdef SPARC" check at compile time, avoding having to
+and use an "#ifdef SPARC" check at compile time, avoiding having to
 patch all the other ad files.

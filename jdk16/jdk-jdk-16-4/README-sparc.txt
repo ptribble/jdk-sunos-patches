@@ -8,4 +8,4 @@ aren't safe to apply on other systems.
 
 Changes in this release:
 
-Needed to sync the ExtendedPC chnages from x86 to SPARC.
+Needed to sync the ExtendedPC changes from x86 to SPARC.

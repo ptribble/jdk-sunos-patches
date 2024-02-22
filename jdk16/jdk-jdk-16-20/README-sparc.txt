@@ -21,7 +21,7 @@ JavaThread::stack_shadow_zone_size() -> StackOverflow::stack_shadow_zone_size()
 JavaThread::stack_guard_zone_size() -> StackOverflow::stack_guard_zone_size()
 JavaThread::stack_guard_yellow_reserved_disabled -> StackOverflow::stack_guard_yellow_reserved_disabled
 
-Cleaned up some fuzz in the main patch associated with tha renaming to
+Cleaned up some fuzz in the main patch associated with the renaming to
 reduce the noise.
 
 In templateTable_sparc.cpp, remove the now unused
@@ -35,7 +35,7 @@ Add os::fetch_compiled_frame_from_context()
 the equivalent code for the first argument on sparc didn't have the +1
 that we have on x86, so don't add +1 here either
 looking at the code for get_frame_at_stack_banging_point(), we get sp
-the same way as x86, but sparc doersn't get fp, and where we would
+the same way as x86, but sparc doesn't get fp, and where we would
 have used fp we put frame::unpatchable so in this function instead of
 fr.fp() use frame::unpatchable (and see also the sparc
 fetch_frame_from_context() implementation that does the same thing)
