@@ -1,4 +1,4 @@
-he whole of SPARC support was removed along with solaris. There is
+The whole of SPARC support was removed along with solaris. There is
 a separate set of patches added to restore sparc support.
 
 The patches are split out and listed in the separate .pls.sparc patch
