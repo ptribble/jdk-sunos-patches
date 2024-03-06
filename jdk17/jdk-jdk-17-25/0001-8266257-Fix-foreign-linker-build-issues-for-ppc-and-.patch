@@ -1,0 +1,832 @@
+From 29ab16284a4f1ac7ed691fd12cb622b0440c04be Mon Sep 17 00:00:00 2001
+From: Maurizio Cimadamore <mcimadamore@openjdk.org>
+Date: Thu, 3 Jun 2021 09:41:21 +0000
+Subject: [PATCH] 8266257: Fix foreign linker build issues for ppc and s390
+
+Reviewed-by: jvernee, vlivanov
+---
+ .../cpu/aarch64/sharedRuntime_aarch64.cpp     |   8 +-
+ src/hotspot/cpu/arm/foreign_globals_arm.cpp   |   5 +
+ .../cpu/arm/universalUpcallHandle_arm.cpp     |   9 +
+ src/hotspot/cpu/ppc/foreign_globals_ppc.cpp   |   5 +
+ .../cpu/ppc/universalUpcallHandle_ppc.cpp     |   9 +
+ src/hotspot/cpu/s390/foreign_globals_s390.cpp |   5 +
+ .../cpu/s390/universalUpcallHandle_s390.cpp   |   9 +
+ src/hotspot/cpu/x86/macroAssembler_x86.cpp    | 215 ++++++++++++++++
+ src/hotspot/cpu/x86/macroAssembler_x86.hpp    |  18 ++
+ src/hotspot/cpu/x86/sharedRuntime_x86_32.cpp  |   6 +-
+ src/hotspot/cpu/x86/sharedRuntime_x86_64.cpp  | 236 +-----------------
+ .../cpu/x86/universalUpcallHandler_x86_64.cpp |   8 +-
+ src/hotspot/cpu/zero/foreign_globals_zero.cpp |   7 +-
+ .../cpu/zero/universalUpcallHandle_zero.cpp   |   9 +
+ src/hotspot/share/runtime/sharedRuntime.hpp   |   5 -
+ 15 files changed, 311 insertions(+), 243 deletions(-)
+
+diff --git a/src/hotspot/cpu/aarch64/sharedRuntime_aarch64.cpp b/src/hotspot/cpu/aarch64/sharedRuntime_aarch64.cpp
+index e724a3df036..c48ab639e66 100644
+--- a/src/hotspot/cpu/aarch64/sharedRuntime_aarch64.cpp
++++ b/src/hotspot/cpu/aarch64/sharedRuntime_aarch64.cpp
+@@ -878,7 +878,7 @@ int SharedRuntime::c_calling_convention(const BasicType *sig_bt,
+ // 64 bits items (Aarch64 abi) even though java would only store
+ // 32bits for a parameter. On 32bit it will simply be 32 bits
+ // So this routine will do 32->32 on 32bit and 32->64 on 64bit
+-void SharedRuntime::move32_64(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
++static void move32_64(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
+   if (src.first()->is_stack()) {
+     if (dst.first()->is_stack()) {
+       // stack to stack
+@@ -979,7 +979,7 @@ static void object_move(MacroAssembler* masm,
+ }
+ 
+ // A float arg may have to do float reg int reg conversion
+-void SharedRuntime::float_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
++static void float_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
+   assert(src.first()->is_stack() && dst.first()->is_stack() ||
+          src.first()->is_reg() && dst.first()->is_reg(), "Unexpected error");
+   if (src.first()->is_stack()) {
+@@ -998,7 +998,7 @@ void SharedRuntime::float_move(MacroAssembler* masm, VMRegPair src, VMRegPair ds
+ }
+ 
+ // A long move
+-void SharedRuntime::long_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
++static void long_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
+   if (src.first()->is_stack()) {
+     if (dst.first()->is_stack()) {
+       // stack to stack
+@@ -1022,7 +1022,7 @@ void SharedRuntime::long_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst
+ 
+ 
+ // A double move
+-void SharedRuntime::double_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
++static void double_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
+   assert(src.first()->is_stack() && dst.first()->is_stack() ||
+          src.first()->is_reg() && dst.first()->is_reg(), "Unexpected error");
+   if (src.first()->is_stack()) {
+diff --git a/src/hotspot/cpu/arm/foreign_globals_arm.cpp b/src/hotspot/cpu/arm/foreign_globals_arm.cpp
+index b3e567dba6b..b5f63ed0dd3 100644
+--- a/src/hotspot/cpu/arm/foreign_globals_arm.cpp
++++ b/src/hotspot/cpu/arm/foreign_globals_arm.cpp
+@@ -34,3 +34,8 @@ const BufferLayout ForeignGlobals::parse_buffer_layout_impl(jobject jlayout) con
+   Unimplemented();
+   return {};
+ }
++
++const CallRegs ForeignGlobals::parse_call_regs_impl(jobject jconv) const {
++  Unimplemented();
++  return {};
++}
+diff --git a/src/hotspot/cpu/arm/universalUpcallHandle_arm.cpp b/src/hotspot/cpu/arm/universalUpcallHandle_arm.cpp
+index 3e46e97bc82..d73197bc9c2 100644
+--- a/src/hotspot/cpu/arm/universalUpcallHandle_arm.cpp
++++ b/src/hotspot/cpu/arm/universalUpcallHandle_arm.cpp
+@@ -29,3 +29,12 @@ address ProgrammableUpcallHandler::generate_upcall_stub(jobject rec, jobject jab
+   Unimplemented();
+   return nullptr;
+ }
++
++address ProgrammableUpcallHandler::generate_optimized_upcall_stub(jobject mh, Method* entry, jobject jabi, jobject jconv) {
++  ShouldNotCallThis();
++  return nullptr;
++}
++
++bool ProgrammableUpcallHandler::supports_optimized_upcalls() {
++  return false;
++}
+diff --git a/src/hotspot/cpu/ppc/foreign_globals_ppc.cpp b/src/hotspot/cpu/ppc/foreign_globals_ppc.cpp
+index a3995cbd29f..cb579020968 100644
+--- a/src/hotspot/cpu/ppc/foreign_globals_ppc.cpp
++++ b/src/hotspot/cpu/ppc/foreign_globals_ppc.cpp
+@@ -36,3 +36,8 @@ const BufferLayout ForeignGlobals::parse_buffer_layout_impl(jobject jlayout) con
+   Unimplemented();
+   return {};
+ }
++
++const CallRegs ForeignGlobals::parse_call_regs_impl(jobject jconv) const {
++  Unimplemented();
++  return {};
++}
+diff --git a/src/hotspot/cpu/ppc/universalUpcallHandle_ppc.cpp b/src/hotspot/cpu/ppc/universalUpcallHandle_ppc.cpp
+index 5a7b9740e02..1b6a44fb48b 100644
+--- a/src/hotspot/cpu/ppc/universalUpcallHandle_ppc.cpp
++++ b/src/hotspot/cpu/ppc/universalUpcallHandle_ppc.cpp
+@@ -30,3 +30,12 @@ address ProgrammableUpcallHandler::generate_upcall_stub(jobject rec, jobject jab
+   Unimplemented();
+   return nullptr;
+ }
++
++address ProgrammableUpcallHandler::generate_optimized_upcall_stub(jobject mh, Method* entry, jobject jabi, jobject jconv) {
++  ShouldNotCallThis();
++  return nullptr;
++}
++
++bool ProgrammableUpcallHandler::supports_optimized_upcalls() {
++  return false;
++}
+diff --git a/src/hotspot/cpu/s390/foreign_globals_s390.cpp b/src/hotspot/cpu/s390/foreign_globals_s390.cpp
+index b3e567dba6b..b5f63ed0dd3 100644
+--- a/src/hotspot/cpu/s390/foreign_globals_s390.cpp
++++ b/src/hotspot/cpu/s390/foreign_globals_s390.cpp
+@@ -34,3 +34,8 @@ const BufferLayout ForeignGlobals::parse_buffer_layout_impl(jobject jlayout) con
+   Unimplemented();
+   return {};
+ }
++
++const CallRegs ForeignGlobals::parse_call_regs_impl(jobject jconv) const {
++  Unimplemented();
++  return {};
++}
+diff --git a/src/hotspot/cpu/s390/universalUpcallHandle_s390.cpp b/src/hotspot/cpu/s390/universalUpcallHandle_s390.cpp
+index 3e46e97bc82..d73197bc9c2 100644
+--- a/src/hotspot/cpu/s390/universalUpcallHandle_s390.cpp
++++ b/src/hotspot/cpu/s390/universalUpcallHandle_s390.cpp
+@@ -29,3 +29,12 @@ address ProgrammableUpcallHandler::generate_upcall_stub(jobject rec, jobject jab
+   Unimplemented();
+   return nullptr;
+ }
++
++address ProgrammableUpcallHandler::generate_optimized_upcall_stub(jobject mh, Method* entry, jobject jabi, jobject jconv) {
++  ShouldNotCallThis();
++  return nullptr;
++}
++
++bool ProgrammableUpcallHandler::supports_optimized_upcalls() {
++  return false;
++}
+diff --git a/src/hotspot/cpu/x86/macroAssembler_x86.cpp b/src/hotspot/cpu/x86/macroAssembler_x86.cpp
+index 0506e61bd4c..a58d0e3d40b 100644
+--- a/src/hotspot/cpu/x86/macroAssembler_x86.cpp
++++ b/src/hotspot/cpu/x86/macroAssembler_x86.cpp
+@@ -913,6 +913,221 @@ void MacroAssembler::print_state64(int64_t pc, int64_t regs[]) {
+   Disassembler::decode((address)pc, (address)pc+32);
+ }
+ 
++// The java_calling_convention describes stack locations as ideal slots on
++// a frame with no abi restrictions. Since we must observe abi restrictions
++// (like the placement of the register window) the slots must be biased by
++// the following value.
++static int reg2offset_in(VMReg r) {
++  // Account for saved rbp and return address
++  // This should really be in_preserve_stack_slots
++  return (r->reg2stack() + 4) * VMRegImpl::stack_slot_size;
++}
++
++static int reg2offset_out(VMReg r) {
++  return (r->reg2stack() + SharedRuntime::out_preserve_stack_slots()) * VMRegImpl::stack_slot_size;
++}
++
++// A long move
++void MacroAssembler::long_move(VMRegPair src, VMRegPair dst) {
++
++  // The calling conventions assures us that each VMregpair is either
++  // all really one physical register or adjacent stack slots.
++
++  if (src.is_single_phys_reg() ) {
++    if (dst.is_single_phys_reg()) {
++      if (dst.first() != src.first()) {
++        mov(dst.first()->as_Register(), src.first()->as_Register());
++      }
++    } else {
++      assert(dst.is_single_reg(), "not a stack pair");
++      movq(Address(rsp, reg2offset_out(dst.first())), src.first()->as_Register());
++    }
++  } else if (dst.is_single_phys_reg()) {
++    assert(src.is_single_reg(),  "not a stack pair");
++    movq(dst.first()->as_Register(), Address(rbp, reg2offset_out(src.first())));
++  } else {
++    assert(src.is_single_reg() && dst.is_single_reg(), "not stack pairs");
++    movq(rax, Address(rbp, reg2offset_in(src.first())));
++    movq(Address(rsp, reg2offset_out(dst.first())), rax);
++  }
++}
++
++// A double move
++void MacroAssembler::double_move(VMRegPair src, VMRegPair dst) {
++
++  // The calling conventions assures us that each VMregpair is either
++  // all really one physical register or adjacent stack slots.
++
++  if (src.is_single_phys_reg() ) {
++    if (dst.is_single_phys_reg()) {
++      // In theory these overlap but the ordering is such that this is likely a nop
++      if ( src.first() != dst.first()) {
++        movdbl(dst.first()->as_XMMRegister(), src.first()->as_XMMRegister());
++      }
++    } else {
++      assert(dst.is_single_reg(), "not a stack pair");
++      movdbl(Address(rsp, reg2offset_out(dst.first())), src.first()->as_XMMRegister());
++    }
++  } else if (dst.is_single_phys_reg()) {
++    assert(src.is_single_reg(),  "not a stack pair");
++    movdbl(dst.first()->as_XMMRegister(), Address(rbp, reg2offset_out(src.first())));
++  } else {
++    assert(src.is_single_reg() && dst.is_single_reg(), "not stack pairs");
++    movq(rax, Address(rbp, reg2offset_in(src.first())));
++    movq(Address(rsp, reg2offset_out(dst.first())), rax);
++  }
++}
++
++
++// A float arg may have to do float reg int reg conversion
++void MacroAssembler::float_move(VMRegPair src, VMRegPair dst) {
++  assert(!src.second()->is_valid() && !dst.second()->is_valid(), "bad float_move");
++
++  // The calling conventions assures us that each VMregpair is either
++  // all really one physical register or adjacent stack slots.
++
++  if (src.first()->is_stack()) {
++    if (dst.first()->is_stack()) {
++      movl(rax, Address(rbp, reg2offset_in(src.first())));
++      movptr(Address(rsp, reg2offset_out(dst.first())), rax);
++    } else {
++      // stack to reg
++      assert(dst.first()->is_XMMRegister(), "only expect xmm registers as parameters");
++      movflt(dst.first()->as_XMMRegister(), Address(rbp, reg2offset_in(src.first())));
++    }
++  } else if (dst.first()->is_stack()) {
++    // reg to stack
++    assert(src.first()->is_XMMRegister(), "only expect xmm registers as parameters");
++    movflt(Address(rsp, reg2offset_out(dst.first())), src.first()->as_XMMRegister());
++  } else {
++    // reg to reg
++    // In theory these overlap but the ordering is such that this is likely a nop
++    if ( src.first() != dst.first()) {
++      movdbl(dst.first()->as_XMMRegister(),  src.first()->as_XMMRegister());
++    }
++  }
++}
++
++// On 64 bit we will store integer like items to the stack as
++// 64 bits items (x86_32/64 abi) even though java would only store
++// 32bits for a parameter. On 32bit it will simply be 32 bits
++// So this routine will do 32->32 on 32bit and 32->64 on 64bit
++void MacroAssembler::move32_64(VMRegPair src, VMRegPair dst) {
++  if (src.first()->is_stack()) {
++    if (dst.first()->is_stack()) {
++      // stack to stack
++      movslq(rax, Address(rbp, reg2offset_in(src.first())));
++      movq(Address(rsp, reg2offset_out(dst.first())), rax);
++    } else {
++      // stack to reg
++      movslq(dst.first()->as_Register(), Address(rbp, reg2offset_in(src.first())));
++    }
++  } else if (dst.first()->is_stack()) {
++    // reg to stack
++    // Do we really have to sign extend???
++    // __ movslq(src.first()->as_Register(), src.first()->as_Register());
++    movq(Address(rsp, reg2offset_out(dst.first())), src.first()->as_Register());
++  } else {
++    // Do we really have to sign extend???
++    // __ movslq(dst.first()->as_Register(), src.first()->as_Register());
++    if (dst.first() != src.first()) {
++      movq(dst.first()->as_Register(), src.first()->as_Register());
++    }
++  }
++}
++
++void MacroAssembler::move_ptr(VMRegPair src, VMRegPair dst) {
++  if (src.first()->is_stack()) {
++    if (dst.first()->is_stack()) {
++      // stack to stack
++      movq(rax, Address(rbp, reg2offset_in(src.first())));
++      movq(Address(rsp, reg2offset_out(dst.first())), rax);
++    } else {
++      // stack to reg
++      movq(dst.first()->as_Register(), Address(rbp, reg2offset_in(src.first())));
++    }
++  } else if (dst.first()->is_stack()) {
++    // reg to stack
++    movq(Address(rsp, reg2offset_out(dst.first())), src.first()->as_Register());
++  } else {
++    if (dst.first() != src.first()) {
++      movq(dst.first()->as_Register(), src.first()->as_Register());
++    }
++  }
++}
++
++// An oop arg. Must pass a handle not the oop itself
++void MacroAssembler::object_move(OopMap* map,
++                        int oop_handle_offset,
++                        int framesize_in_slots,
++                        VMRegPair src,
++                        VMRegPair dst,
++                        bool is_receiver,
++                        int* receiver_offset) {
++
++  // must pass a handle. First figure out the location we use as a handle
++
++  Register rHandle = dst.first()->is_stack() ? rax : dst.first()->as_Register();
++
++  // See if oop is NULL if it is we need no handle
++
++  if (src.first()->is_stack()) {
++
++    // Oop is already on the stack as an argument
++    int offset_in_older_frame = src.first()->reg2stack() + SharedRuntime::out_preserve_stack_slots();
++    map->set_oop(VMRegImpl::stack2reg(offset_in_older_frame + framesize_in_slots));
++    if (is_receiver) {
++      *receiver_offset = (offset_in_older_frame + framesize_in_slots) * VMRegImpl::stack_slot_size;
++    }
++
++    cmpptr(Address(rbp, reg2offset_in(src.first())), (int32_t)NULL_WORD);
++    lea(rHandle, Address(rbp, reg2offset_in(src.first())));
++    // conditionally move a NULL
++    cmovptr(Assembler::equal, rHandle, Address(rbp, reg2offset_in(src.first())));
++  } else {
++
++    // Oop is in an a register we must store it to the space we reserve
++    // on the stack for oop_handles and pass a handle if oop is non-NULL
++
++    const Register rOop = src.first()->as_Register();
++    int oop_slot;
++    if (rOop == j_rarg0)
++      oop_slot = 0;
++    else if (rOop == j_rarg1)
++      oop_slot = 1;
++    else if (rOop == j_rarg2)
++      oop_slot = 2;
++    else if (rOop == j_rarg3)
++      oop_slot = 3;
++    else if (rOop == j_rarg4)
++      oop_slot = 4;
++    else {
++      assert(rOop == j_rarg5, "wrong register");
++      oop_slot = 5;
++    }
++
++    oop_slot = oop_slot * VMRegImpl::slots_per_word + oop_handle_offset;
++    int offset = oop_slot*VMRegImpl::stack_slot_size;
++
++    map->set_oop(VMRegImpl::stack2reg(oop_slot));
++    // Store oop in handle area, may be NULL
++    movptr(Address(rsp, offset), rOop);
++    if (is_receiver) {
++      *receiver_offset = offset;
++    }
++
++    cmpptr(rOop, (int32_t)NULL_WORD);
++    lea(rHandle, Address(rsp, offset));
++    // conditionally move a NULL from the handle area where it was just stored
++    cmovptr(Assembler::equal, rHandle, Address(rsp, offset));
++  }
++
++  // If arg is on the stack then place it otherwise it is already in correct reg.
++  if (dst.first()->is_stack()) {
++    movptr(Address(rsp, reg2offset_out(dst.first())), rHandle);
++  }
++}
++
+ #endif // _LP64
+ 
+ // Now versions that are common to 32/64 bit
+diff --git a/src/hotspot/cpu/x86/macroAssembler_x86.hpp b/src/hotspot/cpu/x86/macroAssembler_x86.hpp
+index 8957372377c..7669a7a9b7e 100644
+--- a/src/hotspot/cpu/x86/macroAssembler_x86.hpp
++++ b/src/hotspot/cpu/x86/macroAssembler_x86.hpp
+@@ -26,6 +26,8 @@
+ #define CPU_X86_MACROASSEMBLER_X86_HPP
+ 
+ #include "asm/assembler.hpp"
++#include "code/vmreg.inline.hpp"
++#include "compiler/oopMap.hpp"
+ #include "utilities/macros.hpp"
+ #include "runtime/rtmLocking.hpp"
+ #include "runtime/vm_version.hpp"
+@@ -206,6 +208,22 @@ class MacroAssembler: public Assembler {
+   // The pointer will be loaded into the thread register.
+   void get_thread(Register thread);
+ 
++#ifdef _LP64
++  // Support for argument shuffling
++
++  void move32_64(VMRegPair src, VMRegPair dst);
++  void long_move(VMRegPair src, VMRegPair dst);
++  void float_move(VMRegPair src, VMRegPair dst);
++  void double_move(VMRegPair src, VMRegPair dst);
++  void move_ptr(VMRegPair src, VMRegPair dst);
++  void object_move(OopMap* map,
++                   int oop_handle_offset,
++                   int framesize_in_slots,
++                   VMRegPair src,
++                   VMRegPair dst,
++                   bool is_receiver,
++                   int* receiver_offset);
++#endif // _LP64
+ 
+   // Support for VM calls
+   //
+diff --git a/src/hotspot/cpu/x86/sharedRuntime_x86_32.cpp b/src/hotspot/cpu/x86/sharedRuntime_x86_32.cpp
+index c0525b6997a..87369d5b007 100644
+--- a/src/hotspot/cpu/x86/sharedRuntime_x86_32.cpp
++++ b/src/hotspot/cpu/x86/sharedRuntime_x86_32.cpp
+@@ -1124,7 +1124,7 @@ static void object_move(MacroAssembler* masm,
+ }
+ 
+ // A float arg may have to do float reg int reg conversion
+-void SharedRuntime::float_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
++static void float_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
+   assert(!src.second()->is_valid() && !dst.second()->is_valid(), "bad float_move");
+ 
+   // Because of the calling convention we know that src is either a stack location
+@@ -1142,7 +1142,7 @@ void SharedRuntime::float_move(MacroAssembler* masm, VMRegPair src, VMRegPair ds
+ }
+ 
+ // A long move
+-void SharedRuntime::long_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
++static void long_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
+ 
+   // The only legal possibility for a long_move VMRegPair is:
+   // 1: two stack slots (possibly unaligned)
+@@ -1161,7 +1161,7 @@ void SharedRuntime::long_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst
+ }
+ 
+ // A double move
+-void SharedRuntime::double_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
++static void double_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
+ 
+   // The only legal possibilities for a double_move VMRegPair are:
+   // The painful thing here is that like long_move a VMRegPair might be
+diff --git a/src/hotspot/cpu/x86/sharedRuntime_x86_64.cpp b/src/hotspot/cpu/x86/sharedRuntime_x86_64.cpp
+index 88ce2a744b4..ffb1c5caf86 100644
+--- a/src/hotspot/cpu/x86/sharedRuntime_x86_64.cpp
++++ b/src/hotspot/cpu/x86/sharedRuntime_x86_64.cpp
+@@ -458,20 +458,6 @@ bool SharedRuntime::is_wide_vector(int size) {
+   return size > 16;
+ }
+ 
+-// The java_calling_convention describes stack locations as ideal slots on
+-// a frame with no abi restrictions. Since we must observe abi restrictions
+-// (like the placement of the register window) the slots must be biased by
+-// the following value.
+-static int reg2offset_in(VMReg r) {
+-  // Account for saved rbp and return address
+-  // This should really be in_preserve_stack_slots
+-  return (r->reg2stack() + 4) * VMRegImpl::stack_slot_size;
+-}
+-
+-static int reg2offset_out(VMReg r) {
+-  return (r->reg2stack() + SharedRuntime::out_preserve_stack_slots()) * VMRegImpl::stack_slot_size;
+-}
+-
+ // ---------------------------------------------------------------------------
+ // Read the array of BasicTypes from a signature, and compute where the
+ // arguments should go.  Values in the VMRegPair regs array refer to 4-byte
+@@ -1163,208 +1149,6 @@ int SharedRuntime::c_calling_convention(const BasicType *sig_bt,
+   return stk_args;
+ }
+ 
+-// On 64 bit we will store integer like items to the stack as
+-// 64 bits items (x86_32/64 abi) even though java would only store
+-// 32bits for a parameter. On 32bit it will simply be 32 bits
+-// So this routine will do 32->32 on 32bit and 32->64 on 64bit
+-void SharedRuntime::move32_64(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
+-  if (src.first()->is_stack()) {
+-    if (dst.first()->is_stack()) {
+-      // stack to stack
+-      __ movslq(rax, Address(rbp, reg2offset_in(src.first())));
+-      __ movq(Address(rsp, reg2offset_out(dst.first())), rax);
+-    } else {
+-      // stack to reg
+-      __ movslq(dst.first()->as_Register(), Address(rbp, reg2offset_in(src.first())));
+-    }
+-  } else if (dst.first()->is_stack()) {
+-    // reg to stack
+-    // Do we really have to sign extend???
+-    // __ movslq(src.first()->as_Register(), src.first()->as_Register());
+-    __ movq(Address(rsp, reg2offset_out(dst.first())), src.first()->as_Register());
+-  } else {
+-    // Do we really have to sign extend???
+-    // __ movslq(dst.first()->as_Register(), src.first()->as_Register());
+-    if (dst.first() != src.first()) {
+-      __ movq(dst.first()->as_Register(), src.first()->as_Register());
+-    }
+-  }
+-}
+-
+-static void move_ptr(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
+-  if (src.first()->is_stack()) {
+-    if (dst.first()->is_stack()) {
+-      // stack to stack
+-      __ movq(rax, Address(rbp, reg2offset_in(src.first())));
+-      __ movq(Address(rsp, reg2offset_out(dst.first())), rax);
+-    } else {
+-      // stack to reg
+-      __ movq(dst.first()->as_Register(), Address(rbp, reg2offset_in(src.first())));
+-    }
+-  } else if (dst.first()->is_stack()) {
+-    // reg to stack
+-    __ movq(Address(rsp, reg2offset_out(dst.first())), src.first()->as_Register());
+-  } else {
+-    if (dst.first() != src.first()) {
+-      __ movq(dst.first()->as_Register(), src.first()->as_Register());
+-    }
+-  }
+-}
+-
+-// An oop arg. Must pass a handle not the oop itself
+-static void object_move(MacroAssembler* masm,
+-                        OopMap* map,
+-                        int oop_handle_offset,
+-                        int framesize_in_slots,
+-                        VMRegPair src,
+-                        VMRegPair dst,
+-                        bool is_receiver,
+-                        int* receiver_offset) {
+-
+-  // must pass a handle. First figure out the location we use as a handle
+-
+-  Register rHandle = dst.first()->is_stack() ? rax : dst.first()->as_Register();
+-
+-  // See if oop is NULL if it is we need no handle
+-
+-  if (src.first()->is_stack()) {
+-
+-    // Oop is already on the stack as an argument
+-    int offset_in_older_frame = src.first()->reg2stack() + SharedRuntime::out_preserve_stack_slots();
+-    map->set_oop(VMRegImpl::stack2reg(offset_in_older_frame + framesize_in_slots));
+-    if (is_receiver) {
+-      *receiver_offset = (offset_in_older_frame + framesize_in_slots) * VMRegImpl::stack_slot_size;
+-    }
+-
+-    __ cmpptr(Address(rbp, reg2offset_in(src.first())), (int32_t)NULL_WORD);
+-    __ lea(rHandle, Address(rbp, reg2offset_in(src.first())));
+-    // conditionally move a NULL
+-    __ cmovptr(Assembler::equal, rHandle, Address(rbp, reg2offset_in(src.first())));
+-  } else {
+-
+-    // Oop is in an a register we must store it to the space we reserve
+-    // on the stack for oop_handles and pass a handle if oop is non-NULL
+-
+-    const Register rOop = src.first()->as_Register();
+-    int oop_slot;
+-    if (rOop == j_rarg0)
+-      oop_slot = 0;
+-    else if (rOop == j_rarg1)
+-      oop_slot = 1;
+-    else if (rOop == j_rarg2)
+-      oop_slot = 2;
+-    else if (rOop == j_rarg3)
+-      oop_slot = 3;
+-    else if (rOop == j_rarg4)
+-      oop_slot = 4;
+-    else {
+-      assert(rOop == j_rarg5, "wrong register");
+-      oop_slot = 5;
+-    }
+-
+-    oop_slot = oop_slot * VMRegImpl::slots_per_word + oop_handle_offset;
+-    int offset = oop_slot*VMRegImpl::stack_slot_size;
+-
+-    map->set_oop(VMRegImpl::stack2reg(oop_slot));
+-    // Store oop in handle area, may be NULL
+-    __ movptr(Address(rsp, offset), rOop);
+-    if (is_receiver) {
+-      *receiver_offset = offset;
+-    }
+-
+-    __ cmpptr(rOop, (int32_t)NULL_WORD);
+-    __ lea(rHandle, Address(rsp, offset));
+-    // conditionally move a NULL from the handle area where it was just stored
+-    __ cmovptr(Assembler::equal, rHandle, Address(rsp, offset));
+-  }
+-
+-  // If arg is on the stack then place it otherwise it is already in correct reg.
+-  if (dst.first()->is_stack()) {
+-    __ movptr(Address(rsp, reg2offset_out(dst.first())), rHandle);
+-  }
+-}
+-
+-// A float arg may have to do float reg int reg conversion
+-void SharedRuntime::float_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
+-  assert(!src.second()->is_valid() && !dst.second()->is_valid(), "bad float_move");
+-
+-  // The calling conventions assures us that each VMregpair is either
+-  // all really one physical register or adjacent stack slots.
+-
+-  if (src.first()->is_stack()) {
+-    if (dst.first()->is_stack()) {
+-      __ movl(rax, Address(rbp, reg2offset_in(src.first())));
+-      __ movptr(Address(rsp, reg2offset_out(dst.first())), rax);
+-    } else {
+-      // stack to reg
+-      assert(dst.first()->is_XMMRegister(), "only expect xmm registers as parameters");
+-      __ movflt(dst.first()->as_XMMRegister(), Address(rbp, reg2offset_in(src.first())));
+-    }
+-  } else if (dst.first()->is_stack()) {
+-    // reg to stack
+-    assert(src.first()->is_XMMRegister(), "only expect xmm registers as parameters");
+-    __ movflt(Address(rsp, reg2offset_out(dst.first())), src.first()->as_XMMRegister());
+-  } else {
+-    // reg to reg
+-    // In theory these overlap but the ordering is such that this is likely a nop
+-    if ( src.first() != dst.first()) {
+-      __ movdbl(dst.first()->as_XMMRegister(),  src.first()->as_XMMRegister());
+-    }
+-  }
+-}
+-
+-// A long move
+-void SharedRuntime::long_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
+-
+-  // The calling conventions assures us that each VMregpair is either
+-  // all really one physical register or adjacent stack slots.
+-
+-  if (src.is_single_phys_reg() ) {
+-    if (dst.is_single_phys_reg()) {
+-      if (dst.first() != src.first()) {
+-        __ mov(dst.first()->as_Register(), src.first()->as_Register());
+-      }
+-    } else {
+-      assert(dst.is_single_reg(), "not a stack pair");
+-      __ movq(Address(rsp, reg2offset_out(dst.first())), src.first()->as_Register());
+-    }
+-  } else if (dst.is_single_phys_reg()) {
+-    assert(src.is_single_reg(),  "not a stack pair");
+-    __ movq(dst.first()->as_Register(), Address(rbp, reg2offset_out(src.first())));
+-  } else {
+-    assert(src.is_single_reg() && dst.is_single_reg(), "not stack pairs");
+-    __ movq(rax, Address(rbp, reg2offset_in(src.first())));
+-    __ movq(Address(rsp, reg2offset_out(dst.first())), rax);
+-  }
+-}
+-
+-// A double move
+-void SharedRuntime::double_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
+-
+-  // The calling conventions assures us that each VMregpair is either
+-  // all really one physical register or adjacent stack slots.
+-
+-  if (src.is_single_phys_reg() ) {
+-    if (dst.is_single_phys_reg()) {
+-      // In theory these overlap but the ordering is such that this is likely a nop
+-      if ( src.first() != dst.first()) {
+-        __ movdbl(dst.first()->as_XMMRegister(), src.first()->as_XMMRegister());
+-      }
+-    } else {
+-      assert(dst.is_single_reg(), "not a stack pair");
+-      __ movdbl(Address(rsp, reg2offset_out(dst.first())), src.first()->as_XMMRegister());
+-    }
+-  } else if (dst.is_single_phys_reg()) {
+-    assert(src.is_single_reg(),  "not a stack pair");
+-    __ movdbl(dst.first()->as_XMMRegister(), Address(rbp, reg2offset_out(src.first())));
+-  } else {
+-    assert(src.is_single_reg() && dst.is_single_reg(), "not stack pairs");
+-    __ movq(rax, Address(rbp, reg2offset_in(src.first())));
+-    __ movq(Address(rsp, reg2offset_out(dst.first())), rax);
+-  }
+-}
+-
+-
+ void SharedRuntime::save_native_result(MacroAssembler *masm, BasicType ret_type, int frame_slots) {
+   // We always ignore the frame_slots arg and just use the space just below frame pointer
+   // which by this time is free to use
+@@ -1438,23 +1222,23 @@ static void unpack_array_argument(MacroAssembler* masm, VMRegPair reg, BasicType
+   tmp.set_ptr(tmp_reg->as_VMReg());
+   if (reg.first()->is_stack()) {
+     // Load the arg up from the stack
+-    move_ptr(masm, reg, tmp);
++    __ move_ptr(reg, tmp);
+     reg = tmp;
+   }
+   __ testptr(reg.first()->as_Register(), reg.first()->as_Register());
+   __ jccb(Assembler::equal, is_null);
+   __ lea(tmp_reg, Address(reg.first()->as_Register(), arrayOopDesc::base_offset_in_bytes(in_elem_type)));
+-  move_ptr(masm, tmp, body_arg);
++  __ move_ptr(tmp, body_arg);
+   // load the length relative to the body.
+   __ movl(tmp_reg, Address(tmp_reg, arrayOopDesc::length_offset_in_bytes() -
+                            arrayOopDesc::base_offset_in_bytes(in_elem_type)));
+-  SharedRuntime::move32_64(masm, tmp, length_arg);
++  __ move32_64(tmp, length_arg);
+   __ jmpb(done);
+   __ bind(is_null);
+   // Pass zeros
+   __ xorptr(tmp_reg, tmp_reg);
+-  move_ptr(masm, tmp, body_arg);
+-  SharedRuntime::move32_64(masm, tmp, length_arg);
++  __ move_ptr(tmp, body_arg);
++  __ move32_64(tmp, length_arg);
+   __ bind(done);
+ 
+   __ block_comment("} unpack_array_argument");
+@@ -2138,7 +1922,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
+         }
+       case T_OBJECT:
+         assert(!is_critical_native, "no oop arguments");
+-        object_move(masm, map, oop_handle_offset, stack_slots, in_regs[i], out_regs[c_arg],
++        __ object_move(map, oop_handle_offset, stack_slots, in_regs[i], out_regs[c_arg],
+                     ((i == 0) && (!is_static)),
+                     &receiver_offset);
+         break;
+@@ -2146,24 +1930,24 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
+         break;
+ 
+       case T_FLOAT:
+-        float_move(masm, in_regs[i], out_regs[c_arg]);
++        __ float_move(in_regs[i], out_regs[c_arg]);
+           break;
+ 
+       case T_DOUBLE:
+         assert( i + 1 < total_in_args &&
+                 in_sig_bt[i + 1] == T_VOID &&
+                 out_sig_bt[c_arg+1] == T_VOID, "bad arg list");
+-        double_move(masm, in_regs[i], out_regs[c_arg]);
++        __ double_move(in_regs[i], out_regs[c_arg]);
+         break;
+ 
+       case T_LONG :
+-        long_move(masm, in_regs[i], out_regs[c_arg]);
++        __ long_move(in_regs[i], out_regs[c_arg]);
+         break;
+ 
+       case T_ADDRESS: assert(false, "found T_ADDRESS in java args");
+ 
+       default:
+-        move32_64(masm, in_regs[i], out_regs[c_arg]);
++        __ move32_64(in_regs[i], out_regs[c_arg]);
+     }
+   }
+ 
+diff --git a/src/hotspot/cpu/x86/universalUpcallHandler_x86_64.cpp b/src/hotspot/cpu/x86/universalUpcallHandler_x86_64.cpp
+index 59d33b42a55..e7b060f9ed4 100644
+--- a/src/hotspot/cpu/x86/universalUpcallHandler_x86_64.cpp
++++ b/src/hotspot/cpu/x86/universalUpcallHandler_x86_64.cpp
+@@ -553,19 +553,19 @@ static void shuffle_arguments(MacroAssembler* _masm, const GrowableArray<ArgMove
+       case T_SHORT:
+       case T_CHAR:
+       case T_INT:
+-       SharedRuntime::move32_64(_masm, from_vmreg, to_vmreg);
++       __ move32_64(from_vmreg, to_vmreg);
+        break;
+ 
+       case T_FLOAT:
+-        SharedRuntime::float_move(_masm, from_vmreg, to_vmreg);
++        __ float_move(from_vmreg, to_vmreg);
+         break;
+ 
+       case T_DOUBLE:
+-        SharedRuntime::double_move(_masm, from_vmreg, to_vmreg);
++        __ double_move(from_vmreg, to_vmreg);
+         break;
+ 
+       case T_LONG :
+-        SharedRuntime::long_move(_masm, from_vmreg, to_vmreg);
++        __ long_move(from_vmreg, to_vmreg);
+         break;
+ 
+       default:
+diff --git a/src/hotspot/cpu/zero/foreign_globals_zero.cpp b/src/hotspot/cpu/zero/foreign_globals_zero.cpp
+index 3ee5d2c30c8..9bbd5e24d8c 100644
+--- a/src/hotspot/cpu/zero/foreign_globals_zero.cpp
++++ b/src/hotspot/cpu/zero/foreign_globals_zero.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
++ * Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+  *
+  * This code is free software; you can redistribute it and/or modify it
+@@ -34,3 +34,8 @@ const BufferLayout ForeignGlobals::parse_buffer_layout_impl(jobject jlayout) con
+   ShouldNotCallThis();
+   return {};
+ }
++
++const CallRegs ForeignGlobals::parse_call_regs_impl(jobject jconv) const {
++  ShouldNotCallThis();
++  return {};
++}
+diff --git a/src/hotspot/cpu/zero/universalUpcallHandle_zero.cpp b/src/hotspot/cpu/zero/universalUpcallHandle_zero.cpp
+index 22b5cdfeca3..59dbf9e6fcc 100644
+--- a/src/hotspot/cpu/zero/universalUpcallHandle_zero.cpp
++++ b/src/hotspot/cpu/zero/universalUpcallHandle_zero.cpp
+@@ -28,3 +28,12 @@ address ProgrammableUpcallHandler::generate_upcall_stub(jobject rec, jobject jab
+   ShouldNotCallThis();
+   return nullptr;
+ }
++
++address ProgrammableUpcallHandler::generate_optimized_upcall_stub(jobject mh, Method* entry, jobject jabi, jobject jconv) {
++  ShouldNotCallThis();
++  return nullptr;
++}
++
++bool ProgrammableUpcallHandler::supports_optimized_upcalls() {
++  return false;
++}
+diff --git a/src/hotspot/share/runtime/sharedRuntime.hpp b/src/hotspot/share/runtime/sharedRuntime.hpp
+index 91f0c14f2e9..c2142ffa30c 100644
+--- a/src/hotspot/share/runtime/sharedRuntime.hpp
++++ b/src/hotspot/share/runtime/sharedRuntime.hpp
+@@ -462,11 +462,6 @@ class SharedRuntime: AllStatic {
+   static void    save_native_result(MacroAssembler *_masm, BasicType ret_type, int frame_slots);
+   static void restore_native_result(MacroAssembler *_masm, BasicType ret_type, int frame_slots);
+ 
+-  static void   move32_64(MacroAssembler* masm, VMRegPair src, VMRegPair dst);
+-  static void   long_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst);
+-  static void  float_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst);
+-  static void double_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst);
+-
+   // Generate a native wrapper for a given method.  The method takes arguments
+   // in the Java compiled code convention, marshals them to the native
+   // convention (handlizes oops, etc), transitions to native, makes the call,
+-- 
+2.43.2
+
