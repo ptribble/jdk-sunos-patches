@@ -12,4 +12,4 @@
 -p1 jdk-jdk-17-25/assembler-hpp.patch
 -p1 jdk-jdk-17-25/8254231-for-sparc.patch
 -p1+-R jdk-jdk-17-25/0001-8264868-Reduce-inclusion-of-registerMap.hpp-and-regi.patch
--p1 0001-8266257-Fix-foreign-linker-build-issues-for-ppc-and-.patch
+-p1 jdk-jdk-17-25/0001-8266257-Fix-foreign-linker-build-issues-for-ppc-and-.patch
