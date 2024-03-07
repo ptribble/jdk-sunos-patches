@@ -27,7 +27,6 @@
 -p0 jdk15u-jdk-15.0.2-ga/patch-src_jdk.crypto.ec_share_native_libsunec_ECC__JNI.cpp
 -p0 jdk15u-jdk-15.0.2-ga/tribblix-LauncherCommon.patch
 -p0 jdk15u-jdk-15.0.2-ga/tribblix-agent-mt.patch
--p0 jdk15u-jdk-15.0.2-ga/tribblix-attachListener_solaris.patch
 -p0 jdk15u-jdk-15.0.2-ga/tribblix-flags-cflags.patch
 -p0 jdk15u-jdk-15.0.2-ga/tribblix-flags-ldflags.patch
 -p0 jdk15u-jdk-15.0.2-ga/tribblix-flags-ldflags2.patch

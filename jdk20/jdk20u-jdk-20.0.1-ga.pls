@@ -6,7 +6,6 @@
 -p0 jdk20u-jdk-20.0.1-ga/patch-make_lib_LibCommon.gmk
 -p0 jdk20u-jdk-20.0.1-ga/patch-src_hotspot_share_gc_g1_g1Analytics.cpp
 -p0 jdk20u-jdk-20.0.1-ga/patch-src_java.desktop_share_native_libsplashscreen_libpng_pngpriv.h
--p0 jdk20u-jdk-20.0.1-ga/tribblix-attachListener_solaris.patch
 -p0 jdk20u-jdk-20.0.1-ga/tribblix-flags-cflags.patch
 -p0 jdk20u-jdk-20.0.1-ga/tribblix-flags-ldflags.patch
 -p0 jdk20u-jdk-20.0.1-ga/tribblix-flags-ldflags2.patch

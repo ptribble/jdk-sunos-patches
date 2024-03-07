@@ -24,7 +24,6 @@
 -p0 jdk-jdk-16-18/patch-src_java.desktop_share_native_libsplashscreen_libpng_pngpriv.h
 -p0 jdk-jdk-16-18/tribblix-LauncherCommon.patch
 -p0 jdk-jdk-16-18/tribblix-agent-mt.patch
--p0 jdk-jdk-16-18/tribblix-attachListener_solaris.patch
 -p0 jdk-jdk-16-18/tribblix-flags-cflags.patch
 -p0 jdk-jdk-16-18/tribblix-flags-ldflags.patch
 -p0 jdk-jdk-16-18/tribblix-flags-ldflags2.patch

@@ -20,7 +20,6 @@
 -p0 jdk-jdk-16-20/patch-src_hotspot_os_solaris_os__solaris.cpp
 -p0 jdk-jdk-16-20/patch-src_hotspot_share_gc_g1_g1Analytics.cpp
 -p0 jdk-jdk-16-20/patch-src_java.desktop_share_native_libsplashscreen_libpng_pngpriv.h
--p0 jdk-jdk-16-20/tribblix-attachListener_solaris.patch
 -p0 jdk-jdk-16-20/tribblix-flags-cflags.patch
 -p0 jdk-jdk-16-20/tribblix-flags-ldflags.patch
 -p0 jdk-jdk-16-20/tribblix-flags-ldflags2.patch

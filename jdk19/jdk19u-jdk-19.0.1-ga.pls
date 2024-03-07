@@ -8,7 +8,6 @@
 -p0 jdk19u-jdk-19.0.1-ga/patch-src_hotspot_os__cpu_solaris__x86_bytes__solaris__x86.inline.hpp
 -p0 jdk19u-jdk-19.0.1-ga/patch-src_hotspot_share_gc_g1_g1Analytics.cpp
 -p0 jdk19u-jdk-19.0.1-ga/patch-src_java.desktop_share_native_libsplashscreen_libpng_pngpriv.h
--p0 jdk19u-jdk-19.0.1-ga/tribblix-attachListener_solaris.patch
 -p0 jdk19u-jdk-19.0.1-ga/tribblix-flags-cflags.patch
 -p0 jdk19u-jdk-19.0.1-ga/tribblix-flags-ldflags.patch
 -p0 jdk19u-jdk-19.0.1-ga/tribblix-flags-ldflags2.patch

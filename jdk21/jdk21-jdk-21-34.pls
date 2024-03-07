@@ -6,7 +6,6 @@
 -p0 jdk21-jdk-21-34/patch-make_lib_LibCommon.gmk
 -p0 jdk21-jdk-21-34/patch-src_hotspot_share_gc_g1_g1Analytics.cpp
 -p0 jdk21-jdk-21-34/patch-src_java.desktop_share_native_libsplashscreen_libpng_pngpriv.h
--p0 jdk21-jdk-21-34/tribblix-attachListener_solaris.patch
 -p0 jdk21-jdk-21-34/tribblix-flags-cflags.patch
 -p0 jdk21-jdk-21-34/tribblix-flags-ldflags.patch
 -p0 jdk21-jdk-21-34/tribblix-flags-ldflags3.patch
