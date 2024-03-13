@@ -9933,7 +9933,7 @@
 -    if (_illumos_page_sizes[beg] <= size_limit) {
 -      _page_sizes.add(_illumos_page_sizes[beg]);
 -      if (_illumos_page_sizes[beg] > *page_size) {
--	*page_size = _illumos_page_sizes[beg];
+-        *page_size = _illumos_page_sizes[beg];
 -      }
 -    }
 -  }
@@ -10476,7 +10476,7 @@
 -static address resolve_symbol(const char* name) {
 -  address addr = resolve_symbol_lazy(name);
 -  if (addr == NULL) {
--    fatal(dlerror());
+-    fatal("resolve_symbol failed (%s)", dlerror());
 -  }
 -  return addr;
 -}
