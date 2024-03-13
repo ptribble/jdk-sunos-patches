@@ -14,7 +14,7 @@ Matcher::pd_implicit_null_fixup
 interpreter_method_reg
 interpreter_method_regP
 
-Also add a no-op implementatiion like s390 of
+Also add a no-op implementation like s390 of
 Matcher::supports_vector_variable_shifts()
 
 In os_solaris_sparc.cpp, delete SignalHandlerMark (just like x86 had
