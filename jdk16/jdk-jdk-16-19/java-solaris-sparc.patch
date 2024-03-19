@@ -1005,7 +1005,7 @@
            -DLAUNCHER_NAME='"$$(LAUNCHER_NAME)"' \
            -DPROGNAME='"$1"' \
            $$($1_CFLAGS), \
--      CFLAGS_solaris := -fPIC, \
+-      CFLAGS_solaris := -KPIC, \
        CFLAGS_windows := $$($1_CFLAGS_windows), \
        DISABLED_WARNINGS_gcc := unused-function, \
        LDFLAGS := $$(LDFLAGS_JDKEXE) \
@@ -1729,7 +1729,17 @@
  
 --- old/make/modules/jdk.hotspot.agent/Lib.gmk	2020-05-20 17:59:21.653337499 -0700
 +++ new/make/modules/jdk.hotspot.agent/Lib.gmk	2020-05-20 17:59:21.257329896 -0700
-@@ -65,10 +65,9 @@
+@@ -30,9 +30,6 @@
+ ifeq ($(call isTargetOs, linux), true)
+   SA_CFLAGS := -D_FILE_OFFSET_BITS=64
+ 
+-else ifeq ($(call isTargetOs, solaris), true)
+-  SA_LDFLAGS := -mt
+-
+ else ifeq ($(call isTargetOs, macosx), true)
+   SA_CFLAGS := -Damd64 -D_GNU_SOURCE -mno-omit-leaf-frame-pointer \
+       -mstack-alignment=16 -fPIC
+@@ -65,10 +62,9 @@
      CFLAGS := $(CFLAGS_JDKLIB) $(SA_CFLAGS), \
      CXXFLAGS := $(CXXFLAGS_JDKLIB) $(SA_CFLAGS) $(SA_CXXFLAGS), \
      EXTRA_SRC := $(LIBSA_EXTRA_SRC), \
@@ -1737,7 +1747,7 @@
 +    LDFLAGS := $(LDFLAGS_JDKLIB), \
      LIBS := $(LIBCXX), \
      LIBS_linux := $(LIBDL), \
--    LIBS_solaris := -ldl -lstdc++ -lthread -lproc, \
+-    LIBS_solaris := -ldl -ldemangle -lthread -lproc, \
      LIBS_macosx := -framework Foundation -framework JavaNativeFoundation \
          -framework JavaRuntimeSupport -framework Security -framework CoreFoundation, \
      LIBS_windows := dbgeng.lib, \
@@ -2015,7 +2025,7 @@
  #endif /* !_JAVASOFT_JVM_MD_H_ */
 --- old/src/hotspot/os/posix/os_posix.cpp	2020-05-20 17:59:42.965746713 -0700
 +++ new/src/hotspot/os/posix/os_posix.cpp	2020-05-20 17:59:42.629740261 -0700
-@@ -459,7 +459,7 @@
+@@ -458,7 +458,7 @@
    st->print("%d", sysconf(_SC_CHILD_MAX));
  
    print_rlimit(st, ", THREADS", RLIMIT_THREADS);
@@ -2024,7 +2034,7 @@
    print_rlimit(st, ", NPROC", RLIMIT_NPROC);
  #endif
  
-@@ -477,12 +477,6 @@
+@@ -476,12 +476,6 @@
    print_rlimit(st, ", MEMLOCK", RLIMIT_MEMLOCK, true);
  #endif
  
@@ -2113,7 +2123,7 @@
 -#endif // !SOLARIS
 --- old/src/hotspot/os/posix/os_posix.hpp	2020-05-20 17:59:44.033767220 -0700
 +++ new/src/hotspot/os/posix/os_posix.hpp	2020-05-20 17:59:43.649759847 -0700
-@@ -138,8 +138,6 @@
+@@ -134,8 +134,6 @@
    sigjmp_buf _jmpbuf;
  };
  
@@ -2122,7 +2132,7 @@
  /*
   * This is the platform-specific implementation underpinning
   * the ParkEvent class, which itself underpins Java-level monitor
-@@ -302,6 +300,4 @@
+@@ -298,6 +296,4 @@
    void notify_all();
  };
  
@@ -2161,7 +2171,7 @@
  #endif
 --- old/src/hotspot/share/c1/c1_LIR.cpp	2020-05-20 17:59:59.318060690 -0700
 +++ new/src/hotspot/share/c1/c1_LIR.cpp	2020-05-20 17:59:58.926053163 -0700
-@@ -453,8 +453,6 @@
+@@ -452,8 +452,6 @@
      case lir_monaddr:        // input and result always valid, info always invalid
      case lir_null_check:     // input and info always valid, result always invalid
      case lir_move:           // input and result always valid, may have info
@@ -2170,7 +2180,7 @@
      {
        assert(op->as_Op1() != NULL, "must be");
        LIR_Op1* op1 = (LIR_Op1*)op;
-@@ -1668,8 +1666,6 @@
+@@ -1645,8 +1643,6 @@
       case lir_convert:               s = "convert";       break;
       case lir_alloc_object:          s = "alloc_obj";     break;
       case lir_monaddr:               s = "mon_addr";      break;
@@ -2181,7 +2191,7 @@
       case lir_cmp_l2i:               s = "cmp_l2i";       break;
 --- old/src/hotspot/share/c1/c1_LIR.hpp	2020-05-20 18:00:00.446082348 -0700
 +++ new/src/hotspot/share/c1/c1_LIR.hpp	2020-05-20 18:00:00.042074591 -0700
-@@ -915,8 +915,6 @@
+@@ -913,8 +913,6 @@
        , lir_monaddr
        , lir_roundfp
        , lir_safepoint
@@ -2190,7 +2200,7 @@
        , lir_unwind
    , end_op1
    , begin_op2
-@@ -2120,9 +2118,6 @@
+@@ -2106,9 +2104,6 @@
    void logical_or  (LIR_Opr left, LIR_Opr right, LIR_Opr dst) { append(new LIR_Op2(lir_logic_or,   left, right, dst)); }
    void logical_xor (LIR_Opr left, LIR_Opr right, LIR_Opr dst) { append(new LIR_Op2(lir_logic_xor,  left, right, dst)); }
  
@@ -2202,7 +2212,7 @@
      append(new LIR_Op2(lir_throw, exceptionPC, exceptionOop, LIR_OprFact::illegalOpr, info));
 --- old/src/hotspot/share/c1/c1_LIRAssembler.cpp	2020-05-20 18:00:01.402100705 -0700
 +++ new/src/hotspot/share/c1/c1_LIRAssembler.cpp	2020-05-20 18:00:01.066094253 -0700
-@@ -578,16 +578,6 @@
+@@ -572,16 +572,6 @@
        monitor_address(op->in_opr()->as_constant_ptr()->as_jint(), op->result_opr());
        break;
  
@@ -2219,7 +2229,7 @@
      case lir_unwind:
        unwind_op(op->in_opr());
        break;
-@@ -841,11 +831,7 @@
+@@ -835,11 +825,7 @@
          if (!r->is_stack()) {
            stringStream st;
            st.print("bad oop %s at %d", r->as_Register()->name(), _masm->offset());
@@ -2233,7 +2243,7 @@
          }
 --- old/src/hotspot/share/classfile/classListParser.cpp	2020-05-20 18:00:04.798165911 -0700
 +++ new/src/hotspot/share/classfile/classListParser.cpp	2020-05-20 18:00:04.402158309 -0700
-@@ -289,7 +289,7 @@
+@@ -282,7 +282,7 @@
  // This function is used for loading classes for customized class loaders
  // during archive dumping.
  InstanceKlass* ClassListParser::load_class_from_source(Symbol* class_name, TRAPS) {
@@ -2280,7 +2290,7 @@
          If the agent library is statically linked into the executable
          then no actual loading takes place.
      <p/>
-@@ -13326,7 +13325,7 @@
+@@ -13324,7 +13323,7 @@
        Sent by the VM to request the agent to dump its data.  This
        is just a hint and the agent need not react to this event.
        This is useful for processing command-line signals from users.  For
@@ -2301,7 +2311,7 @@
  
 --- old/src/hotspot/share/runtime/deoptimization.cpp	2020-05-20 18:00:27.974610917 -0700
 +++ new/src/hotspot/share/runtime/deoptimization.cpp	2020-05-20 18:00:27.582603389 -0700
-@@ -1096,23 +1096,9 @@
+@@ -1083,23 +1083,9 @@
      case 4:
        *((jint *) check_alignment_get_addr(obj, index, 4)) = (jint) *((jint *) &val);
        break;
@@ -2400,7 +2410,7 @@
    if (PrintFlagsFinal || PrintFlagsRanges) {
 --- old/src/hotspot/share/runtime/java.cpp	2020-05-20 18:00:33.342713988 -0700
 +++ new/src/hotspot/share/runtime/java.cpp	2020-05-20 18:00:32.958706615 -0700
-@@ -564,7 +564,6 @@
+@@ -563,7 +563,6 @@
  void notify_vm_shutdown() {
    // For now, just a dtrace probe.
    HOTSPOT_VM_SHUTDOWN();
@@ -2419,7 +2429,7 @@
    static intx current_thread_id();
    static int current_process_id();
  
-@@ -791,10 +791,8 @@
+@@ -786,10 +786,8 @@
    // JVMTI & JVM monitoring and management support
    // The thread_cpu_time() and current_thread_cpu_time() are only
    // supported if is_thread_cpu_time_supported() returns true.
@@ -2443,7 +2453,7 @@
  # include "semaphore_bsd.hpp"
 --- old/src/hotspot/share/runtime/thread.cpp	2020-05-20 18:00:37.538794556 -0700
 +++ new/src/hotspot/share/runtime/thread.cpp	2020-05-20 18:00:37.202788104 -0700
-@@ -351,12 +351,6 @@
+@@ -353,12 +353,6 @@
    set_stack_base(os::current_stack_base());
    set_stack_size(os::current_stack_size());
  
@@ -2489,7 +2499,7 @@
  class MemBaseline;
 --- old/src/hotspot/share/utilities/debug.cpp	2020-05-20 18:00:41.782876045 -0700
 +++ new/src/hotspot/share/utilities/debug.cpp	2020-05-20 18:00:41.442869517 -0700
-@@ -640,12 +640,11 @@
+@@ -641,12 +641,11 @@
    tty->print_cr("  findm(intptr_t pc) - finds Method*");
    tty->print_cr("  find(intptr_t x)   - finds & prints nmethod/stub/bytecode/oop based on pointer into it");
    tty->print_cr("  pns(void* sp, void* fp, void* pc)  - print native (i.e. mixed) stack trace. E.g.");
@@ -2541,7 +2551,7 @@
  #endif /* defined(DTRACE_ENABLED) */
 --- old/src/hotspot/share/utilities/globalDefinitions_gcc.hpp	2020-05-20 18:00:44.978937412 -0700
 +++ new/src/hotspot/share/utilities/globalDefinitions_gcc.hpp	2020-05-20 18:00:44.586929885 -0700
-@@ -39,36 +39,15 @@
+@@ -39,35 +39,15 @@
  #include <stdlib.h>
  #include <wchar.h>
  
@@ -2568,7 +2578,6 @@
 -#include <sys/procset.h>
 -#include <ucontext.h>
 -#include <setjmp.h>
--#include <inttypes.h>
 -#endif // SOLARIS
 -
 -# ifdef SOLARIS_MUTATOR_LIBTHREAD
@@ -6783,7 +6792,7 @@
  import sun.jvm.hotspot.runtime.win32_x86.Win32X86JavaThreadPDAccess;
  import sun.jvm.hotspot.runtime.win32_amd64.Win32AMD64JavaThreadPDAccess;
  import sun.jvm.hotspot.runtime.win32_aarch64.Win32AARCH64JavaThreadPDAccess;
-@@ -99,13 +95,7 @@
+@@ -98,13 +94,7 @@
  
          access = null;
          // FIXME: find the platform specific PD class by reflection?
@@ -11445,7 +11454,7 @@
 -#endif // OS_SOLARIS_OS_SHARE_SOLARIS_HPP
 --- old/src/hotspot/os/solaris/os_solaris.cpp	2020-05-20 18:09:34.749109332 -0700
 +++ /dev/null	2020-03-09 18:57:19.455001459 -0700
-@@ -1,4423 +0,0 @@
+@@ -1,4429 +0,0 @@
 -/*
 - * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
 - * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -15696,8 +15705,14 @@
 -  argv[2] = cmd;
 -  argv[3] = NULL;
 -
+-  // fork is async-safe, fork1 is not so can't use in signal handler
 -  pid_t pid;
--  pid = fork();
+-  Thread* t = Thread::current_or_null_safe();
+-  if (t != NULL && t->is_inside_signal_handler()) {
+-    pid = fork();
+-  } else {
+-    pid = fork1();
+-  }
 -
 -  if (pid < 0) {
 -    // fork failed
@@ -18284,7 +18299,7 @@
 -#endif // OS_CPU_SOLARIS_X86_ORDERACCESS_SOLARIS_X86_HPP
 --- old/src/hotspot/os_cpu/solaris_x86/os_solaris_x86.cpp	2020-05-20 18:10:01.145616115 -0700
 +++ /dev/null	2020-03-09 18:57:19.455001459 -0700
-@@ -1,927 +0,0 @@
+@@ -1,928 +0,0 @@
 -/*
 - * Copyright (c) 1999, 2020, Oracle and/or its affiliates. All rights reserved.
 - * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -18680,10 +18695,11 @@
 -
 -  Thread* t = Thread::current_or_null_safe();
 -
--  // If crash protection is installed we may longjmp away and no destructors
--  // for objects in this scope will be run.
--  // So don't use any RAII utilities before crash protection is checked.
+-  // Must do this before SignalHandlerMark, if crash protection installed we will longjmp away
+-  // (no destructors can be run)
 -  os::ThreadCrashProtection::check_crash_protection(sig, t);
+-
+-  SignalHandlerMark shm(t);
 -
 -  if(sig == SIGPIPE || sig == SIGXFSZ) {
 -    if (PosixSignals::chained_handler(sig, info, ucVoid)) {
@@ -26178,9 +26194,9 @@
 - * questions.
 - */
 -
+-#include <sys/devpoll.h>
 -#include <sys/types.h>
 -#include <sys/stat.h>
--#include <devpoll.h>
 -#include <fcntl.h>
 -#include <poll.h>
 -
