@@ -20,28 +20,6 @@ That's to do with freetype, I think.
 
 Changes:
 
-In 16+20
-
-Mostly the stack overflow handling reorg
-8254158: Consolidate per-platform stack overflow handling code
-https://github.com/openjdk/jdk/commit/ba5dc67a
-covered by illumos-port-9.patch, although ideally we would merge
-these changes into the main patch
-
-illumos-port-8.patch - some Linux-specific code is guarded by !bsd and
-!aix
-
-In 16+19
-
-Quite a few changes this time, particularly the signal code merge in
-os_posix.cpp as part of #8252324
-https://github.com/openjdk/jdk/commit/4fe07ccc
-
-shenandoahConcurrentRoots.cpp, just removed the patch
-
-pd_reserve_memory loses the alignment hint (this was marked as a TODO
-from 16+18 below)
-
 In 16+18
 
 remove src/jdk.crypto.ec/share/legal/ecc.md from the patch, as it no

@@ -8,4 +8,5 @@ aren't safe to apply on other systems.
 
 Changes in this release:
 
-No SPARC build attempted at 16+18, the regular patches are broken.
+No SPARC build attempted at 16+18, the regular patches were broken,
+although now fixed.
