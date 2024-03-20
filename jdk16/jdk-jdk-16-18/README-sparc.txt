@@ -8,5 +8,13 @@ aren't safe to apply on other systems.
 
 Changes in this release:
 
-No SPARC build attempted at 16+18, the regular patches were broken,
-although now fixed.
+In thread_solaris_x86.hpp, we had to remove last_Java_fp and
+set_last_Java_fp, but those don't exist on sparc so nothing to do.
+
+From s390, need to implement the 2 call_VM -> call_VM_leaf changes
+
+And add the Address(Register base, ByteSize disp) : change
+And the other removals of ASSERT for the ByteSize -> int change
+
+SPARC build was originally skipped as the regular patches were broken,
+now fixed.
