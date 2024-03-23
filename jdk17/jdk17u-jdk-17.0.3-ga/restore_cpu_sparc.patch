@@ -19933,7 +19933,7 @@ diff -ur --new-file a/src/hotspot/cpu/sparc/macroAssembler_sparc.cpp b/src/hotsp
 +  assert(oop_recorder() != NULL, "this assembler needs an OopRecorder");
 +  int klass_index = oop_recorder()->find_index(k);
 +  RelocationHolder rspec = metadata_Relocation::spec(klass_index);
-+  uint32_t encoded_k = CompressedKlassPointers::encode(k);
++  narrowKlass encoded_k = CompressedKlassPointers::encode(k);
 +
 +  assert_not_delayed();
 +  // Relocation with special format (see relocInfo_sparc.hpp).
