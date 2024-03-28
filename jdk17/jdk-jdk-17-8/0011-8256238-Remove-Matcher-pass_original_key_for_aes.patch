@@ -1,7 +1,7 @@
 This is a straight revert of the original commit.
 
 Ideally it would be simplified to simply guard the changes by
-cehcing for SPARC, rather than keying off a function in the ad files.
+checking for SPARC, rather than keying off a function in the ad files.
 
 From 19bade02804b8fdb9fa5bbd091c6a59a08d70cb2 Mon Sep 17 00:00:00 2001
 From: Claes Redestad <redestad@openjdk.org>
