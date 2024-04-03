@@ -35,3 +35,4 @@
 -p1 jdk18-jdk-18-36/illumos-port-13.patch
 -p1 jdk18-jdk-18-36/illumos-port-14.patch
 -p1 jdk18-jdk-18-36/illumos-port-15.patch
+-p1 jdk18-jdk-18-36/sparc-bitness.patch

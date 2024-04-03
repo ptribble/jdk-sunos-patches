@@ -34,3 +34,4 @@
 -p1 jdk18u-jdk-18.0.2-ga/illumos-port-13.patch
 -p1 jdk18u-jdk-18.0.2-ga/illumos-port-14.patch
 -p1 jdk18u-jdk-18.0.2-ga/illumos-port-15.patch
+-p1 jdk18u-jdk-18.0.2-ga/sparc-bitness.patch
