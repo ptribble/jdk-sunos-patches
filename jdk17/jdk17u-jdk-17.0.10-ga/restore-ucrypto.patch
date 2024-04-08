@@ -4418,7 +4418,7 @@ diff -ur -N /tmp/a/solaris/classes/com/oracle/security/ucrypto/UcryptoMech.java 
 diff -ur -N /tmp/a/solaris/classes/com/oracle/security/ucrypto/UcryptoProvider.java jdk15-jdk-15-24/src/jdk.crypto.ucrypto/solaris/classes/com/oracle/security/ucrypto/UcryptoProvider.java
 --- /tmp/a/solaris/classes/com/oracle/security/ucrypto/UcryptoProvider.java	1970-01-01 01:00:00.000000000 +0100
 +++ jdk15-jdk-15-24/src/jdk.crypto.ucrypto/solaris/classes/com/oracle/security/ucrypto/UcryptoProvider.java	2020-05-20 19:29:11.000000000 +0100
-@@ -0,0 +1,256 @@
+@@ -0,0 +1,258 @@
 +/*
 + * Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -4471,6 +4471,7 @@ diff -ur -N /tmp/a/solaris/classes/com/oracle/security/ucrypto/UcryptoProvider.j
 +            // cannot use LoadLibraryAction because that would make the native
 +            // library available to the bootclassloader, but we run in the
 +            // platform classloader.
++            @SuppressWarnings("removal")
 +            provProp = AccessController.doPrivileged
 +                (new PrivilegedAction<>() {
 +                    @Override
@@ -4616,6 +4617,7 @@ diff -ur -N /tmp/a/solaris/classes/com/oracle/security/ucrypto/UcryptoProvider.j
 +        }
 +    }
 +
++    @SuppressWarnings("removal")
 +    public UcryptoProvider() {
 +        super("OracleUcrypto", PROVIDER_VER, "Provider using Oracle Ucrypto API");
 +
@@ -4678,7 +4680,7 @@ diff -ur -N /tmp/a/solaris/classes/com/oracle/security/ucrypto/UcryptoProvider.j
 diff -ur -N /tmp/a/solaris/classes/module-info.java jdk15-jdk-15-24/src/jdk.crypto.ucrypto/solaris/classes/module-info.java
 --- /tmp/a/solaris/classes/module-info.java	1970-01-01 01:00:00.000000000 +0100
 +++ jdk15-jdk-15-24/src/jdk.crypto.ucrypto/solaris/classes/module-info.java	2020-05-20 19:29:11.000000000 +0100
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,36 @@
 +/*
 + * Copyright (c) 2014, 2019, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -4710,10 +4712,7 @@ diff -ur -N /tmp/a/solaris/classes/module-info.java jdk15-jdk-15-24/src/jdk.cryp
 + * @provides java.security.Provider
 + * @moduleGraph
 + * @since 9
-+ * @deprecated This module is deprecated and subject to removal in a future
-+ *    version of the JDK. See JEP 362 for more information.
 + */
-+@Deprecated(since="14", forRemoval=true)
 +module jdk.crypto.ucrypto {
 +    provides java.security.Provider with com.oracle.security.ucrypto.UcryptoProvider;
 +}
@@ -6732,3 +6731,37 @@ diff -ur -N /tmp/a/solaris/native/libj2ucrypto/nativeFunc.h jdk15-jdk-15-24/src/
 +PLATFORM_MODULES_solaris= \
 +    jdk.crypto.ucrypto \
 +    #
+--- /dev/null   2024-04-08 15:13:31.000000000 +0100
++++ jdk15-jdk-15-24/src/java.base/solaris/classes/module-info.java.extra        2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,31 @@
++/*
++ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.  Oracle designates this
++ * particular file as subject to the "Classpath" exception as provided
++ * by Oracle in the LICENSE file that accompanied this code.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++exports sun.nio.ch to jdk.crypto.ucrypto;
++exports sun.security.action to jdk.crypto.ucrypto;
++exports sun.security.internal.spec to jdk.crypto.ucrypto;
++exports sun.security.jca to jdk.crypto.ucrypto;
++exports sun.security.rsa to jdk.crypto.ucrypto;
++exports sun.security.util to jdk.crypto.ucrypto;
