@@ -4418,7 +4418,7 @@ diff -ur -N /tmp/a/solaris/classes/com/oracle/security/ucrypto/UcryptoMech.java 
 diff -ur -N /tmp/a/solaris/classes/com/oracle/security/ucrypto/UcryptoProvider.java jdk15-jdk-15-24/src/jdk.crypto.ucrypto/solaris/classes/com/oracle/security/ucrypto/UcryptoProvider.java
 --- /tmp/a/solaris/classes/com/oracle/security/ucrypto/UcryptoProvider.java	1970-01-01 01:00:00.000000000 +0100
 +++ jdk15-jdk-15-24/src/jdk.crypto.ucrypto/solaris/classes/com/oracle/security/ucrypto/UcryptoProvider.java	2020-05-20 19:29:11.000000000 +0100
-@@ -0,0 +1,258 @@
+@@ -0,0 +1,257 @@
 +/*
 + * Copyright (c) 2014, 2020, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -4458,6 +4458,7 @@ diff -ur -N /tmp/a/solaris/classes/com/oracle/security/ucrypto/UcryptoProvider.j
 + *
 + * @since 9
 + */
++@SuppressWarnings("removal")
 +public final class UcryptoProvider extends Provider {
 +
 +    private static final long serialVersionUID = 351251234302833L;
@@ -4471,7 +4472,6 @@ diff -ur -N /tmp/a/solaris/classes/com/oracle/security/ucrypto/UcryptoProvider.j
 +            // cannot use LoadLibraryAction because that would make the native
 +            // library available to the bootclassloader, but we run in the
 +            // platform classloader.
-+            @SuppressWarnings("removal")
 +            provProp = AccessController.doPrivileged
 +                (new PrivilegedAction<>() {
 +                    @Override
@@ -4617,7 +4617,6 @@ diff -ur -N /tmp/a/solaris/classes/com/oracle/security/ucrypto/UcryptoProvider.j
 +        }
 +    }
 +
-+    @SuppressWarnings("removal")
 +    public UcryptoProvider() {
 +        super("OracleUcrypto", PROVIDER_VER, "Provider using Oracle Ucrypto API");
 +
