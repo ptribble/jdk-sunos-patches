@@ -1,0 +1,2625 @@
+This patch will restore the tests. It's here for completeness, but
+may not be applied at the present time.
+
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/CipherSignNotSupported.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/CipherSignNotSupported.java
+--- a/test/jdk/com/oracle/security/ucrypto/CipherSignNotSupported.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/CipherSignNotSupported.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,113 @@
++/*
++ * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++/**
++ * @test
++ * @bug 8029849 8132082 8133535
++ * @summary Make sure signing via encrypt and verifying via decrypt are not
++ * supported by OracleUcrypto provider.
++ * @author Anthony Scarpino
++ * @key randomness
++ */
++
++import java.util.Random;
++import java.security.*;
++import java.security.interfaces.*;
++import java.security.spec.RSAPrivateKeySpec;
++import javax.crypto.Cipher;
++
++public class CipherSignNotSupported extends UcryptoTest {
++
++    public static void main(String[] args) throws Exception {
++        main(new CipherSignNotSupported(), null);
++    }
++
++    public void doTest(Provider p) throws Exception {
++        Cipher c = null;
++        Random random = new Random();
++        byte[] pt = new byte[117];
++        byte[] ct = new byte[200];
++        random.nextBytes(pt);
++
++        try {
++            c = Cipher.getInstance("RSA/ECB/PKCS1Padding", p);
++        } catch (NoSuchAlgorithmException e) {
++            if (System.getProperty("os.version").compareTo("5.10") == 0) {
++                System.out.println("RSA not supported in S10");
++                return;
++            }
++            throw e;
++        }
++
++        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
++        kpg.initialize(1024);
++        KeyPair kp = kpg.generateKeyPair();
++
++        // Encryption
++        c.init(Cipher.ENCRYPT_MODE, kp.getPublic());
++        ct = c.doFinal(pt);
++        // Decryption
++        PrivateKey[] privKeys = new PrivateKey[2];
++        privKeys[0] = kp.getPrivate();
++        if (privKeys[0] instanceof RSAPrivateCrtKey) {
++            RSAPrivateCrtKey k = (RSAPrivateCrtKey) privKeys[0];
++            KeyFactory kf = KeyFactory.getInstance("RSA");
++            privKeys[1] = kf.generatePrivate
++                (new RSAPrivateKeySpec(k.getModulus(), k.getPrivateExponent()));
++        } else {
++            privKeys = new PrivateKey[] {privKeys[0]};
++        }
++
++        for (PrivateKey pk : privKeys) {
++            System.out.println("Testing " + pk);
++            c.init(Cipher.DECRYPT_MODE, pk);
++            c.doFinal(ct);
++
++            // Sign
++            try {
++                c.init(Cipher.ENCRYPT_MODE, pk);
++                ct = c.doFinal(pt);
++                throw new RuntimeException("Encrypt operation should have failed.");
++            } catch (InvalidKeyException e) {
++                if (!e.getMessage().contains("RSAPublicKey required for encryption")) {
++                    System.out.println("Wrong exception thrown.");
++                    throw e;
++                }
++            }
++        }
++
++        // Verify
++        try {
++            c.init(Cipher.DECRYPT_MODE, kp.getPublic());
++            c.doFinal(ct);
++            throw new RuntimeException("Decrypt operation should have failed.");
++        } catch (InvalidKeyException e) {
++            if (!e.getMessage().contains("RSAPrivateKey required for decryption")) {
++                System.out.println("Wrong exception thrown.");
++                throw e;
++            }
++        }
++
++        System.out.println("Pass");
++    }
++}
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/ReadConfInUTF16Env.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/ReadConfInUTF16Env.java
+--- a/test/jdk/com/oracle/security/ucrypto/ReadConfInUTF16Env.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/ReadConfInUTF16Env.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,31 @@
++/*
++ * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++import java.security.Security;
++
++public class ReadConfInUTF16Env {
++    public static void main(String argv[]) {
++        String name = Security.getProvider("OracleUcrypto").getName();
++        System.out.println(name);
++    }
++}
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/ReadConfInUTF16Env.sh jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/ReadConfInUTF16Env.sh
+--- a/test/jdk/com/oracle/security/ucrypto/ReadConfInUTF16Env.sh	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/ReadConfInUTF16Env.sh	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,38 @@
++#
++# Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
++# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++#
++# This code is free software; you can redistribute it and/or modify it
++# under the terms of the GNU General Public License version 2 only, as
++# published by the Free Software Foundation.
++#
++# This code is distributed in the hope that it will be useful, but WITHOUT
++# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++# version 2 for more details (a copy is included in the LICENSE file that
++# accompanied this code).
++#
++# You should have received a copy of the GNU General Public License version
++# 2 along with this work; if not, write to the Free Software Foundation,
++# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++#
++# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++# or visit www.oracle.com if you need additional information or have any
++# questions.
++#
++
++# @test
++# @bug 8160267
++# @requires (os.family == "solaris")
++# @summary Ucrypto config file cannot be read with -Dfile.encoding=UTF-16
++# @build UcryptoTest ReadConfInUTF16Env
++# @run shell ReadConfInUTF16Env.sh
++
++# jtreg does not like -Dfile.encoding=UTF-16 inside a @run main line,
++# testlibrary.ProcessTools.createJavaProcessBuilder() also had troubles
++# executing a subprocess with -Dfile.encoding=UTF-16 option added,
++# therefore a shell test is written.
++
++$TESTJAVA/bin/java $TESTVMOPTS -cp $TESTCLASSES \
++  -Dfile.encoding=UTF-16 \
++  ReadConfInUTF16Env
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/Test8004873.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/Test8004873.java
+--- a/test/jdk/com/oracle/security/ucrypto/Test8004873.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/Test8004873.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,102 @@
++/*
++ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++/*
++ * @test
++ * @bug     8004873
++ * @summary Need to include data buffered by Padding impl when calculating
++ * output buffer sizes.
++ */
++
++import java.io.*;
++import java.security.*;
++import java.security.spec.*;
++import java.util.*;
++import javax.crypto.*;
++import javax.crypto.spec.*;
++
++public class Test8004873 extends UcryptoTest {
++
++    private static final String[] PADDEDCIPHER_ALGOS = {
++        "AES/ECB/PKCS5Padding",
++        "AES/CBC/PKCS5Padding",
++        "AES/CFB128/PKCS5Padding"
++    };
++
++    private static final SecretKey AES_KEY;
++
++    static {
++        byte[] keyValue = {
++            62, 124, -2, -15, 86, -25, 18, -112, 110, 31, 96, 59,
++            89, 70, 60, 103};
++        AES_KEY = new SecretKeySpec(keyValue, "AES");
++    }
++
++    public static void main(String[] args) throws Exception {
++        main(new Test8004873(), null);
++    }
++
++    public void doTest(Provider prov) throws Exception {
++        boolean result = true;
++        for (String algo : PADDEDCIPHER_ALGOS) {
++            if (!testOOS(algo, prov)) {
++                result = false;
++                System.out.println(algo + " Test Failed!");
++            }
++        }
++        if (!result) {
++            throw new Exception("One or more test failed!");
++        }
++    }
++
++    private boolean testOOS(String algo, Provider prov)
++        throws Exception {
++
++        String password = "abcd1234";
++        Cipher c;
++        try {
++            c = Cipher.getInstance(algo, prov);
++        } catch(NoSuchAlgorithmException nsae) {
++            System.out.println("Skipping Unsupported algo: " + algo);
++            return true;
++        }
++        c.init(Cipher.ENCRYPT_MODE, AES_KEY);
++        AlgorithmParameters params = c.getParameters();
++        ByteArrayOutputStream baos = new ByteArrayOutputStream();
++        CipherOutputStream cos = new CipherOutputStream(baos, c);
++        ObjectOutputStream oos = new ObjectOutputStream(cos);
++        oos.writeObject(password);
++        oos.flush();
++        oos.close();
++        byte[] encrypted = baos.toByteArray();
++
++        c.init(Cipher.DECRYPT_MODE, AES_KEY, params);
++
++        ByteArrayInputStream bais = new ByteArrayInputStream(encrypted);
++        CipherInputStream cis = new CipherInputStream(bais, c);
++        ObjectInputStream ois = new ObjectInputStream(cis);
++
++        String recovered = (String) ois.readObject();
++        return recovered.equals(password);
++    }
++}
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/TestAES.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestAES.java
+--- a/test/jdk/com/oracle/security/ucrypto/TestAES.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestAES.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,382 @@
++/*
++ * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++/*
++ * @test
++ * @bug 7088989 8014374 8167512 8173708
++ * @summary Ensure the AES ciphers of OracleUcrypto provider works correctly
++ * @key randomness
++ * @library /test/lib
++ * @build jdk.test.lib.Platform
++ *        jdk.test.lib.Utils
++ * @run main TestAES
++ * @run main/othervm -Dpolicy=empty.policy TestAES
++ */
++
++import java.security.*;
++import java.security.spec.*;
++import java.util.*;
++import javax.crypto.*;
++import javax.crypto.spec.*;
++
++import jdk.test.lib.OSVersion;
++import jdk.test.lib.Platform;
++import jdk.test.lib.Utils;
++
++public class TestAES extends UcryptoTest {
++
++    private static final String[] PADDEDCIPHER_ALGOS = {
++        "AES/ECB/PKCS5Padding",
++        "AES/CBC/PKCS5Padding",
++        "AES/CFB128/PKCS5Padding"
++    };
++
++    private static final String[] CIPHER_ALGOS = {
++        "AES/ECB/NoPadding",
++        "AES/CBC/NoPadding",
++        "AES/CFB128/NoPadding",
++        "AES/CTR/NoPadding",
++    };
++
++    private static final SecretKey CIPHER_KEY =
++        new SecretKeySpec(new byte[16], "AES");
++
++    private static final boolean IS_BAD_SOLARIS = isBadSolaris();
++
++    public static void main(String[] args) throws Exception {
++        // It has to determine Solaris version before enabling security manager.
++        // Because that needs some permissions, like java.io.FilePermission.
++        String policy = System.getProperty("policy");
++        if (policy != null) {
++            enableSecurityManager(policy);
++        }
++
++        main(new TestAES(), null);
++    }
++
++    // Enables security manager and uses the specified policy file to override
++    // the default one.
++    private static void enableSecurityManager(String policy) {
++        String policyURL = "file://" + System.getProperty("test.src", ".") + "/"
++                + policy;
++        System.out.println("policyURL: " + policyURL);
++        Security.setProperty("policy.url.1", policyURL);
++        System.setSecurityManager(new SecurityManager());
++    }
++
++    public void doTest(Provider prov) throws Exception {
++        // Provider for testing Interoperability
++        Provider sunJCEProv = Security.getProvider("SunJCE");
++
++        testCipherInterop(CIPHER_ALGOS, CIPHER_KEY, prov, sunJCEProv);
++        testCipherInterop(PADDEDCIPHER_ALGOS, CIPHER_KEY, prov, sunJCEProv);
++
++        testCipherOffset(CIPHER_ALGOS, CIPHER_KEY, prov);
++        testCipherOffset(PADDEDCIPHER_ALGOS, CIPHER_KEY, prov);
++
++        testCipherKeyWrapping(PADDEDCIPHER_ALGOS, CIPHER_KEY, prov, sunJCEProv);
++        testCipherGCM(CIPHER_KEY, prov);
++    }
++
++    private static void testCipherInterop(String[] algos, SecretKey key,
++                                          Provider p,
++                                          Provider interopP) {
++        boolean testPassed = true;
++        byte[] in = new byte[32];
++        (new SecureRandom()).nextBytes(in);
++
++        for (String algo : algos) {
++            try {
++                // check ENC
++                Cipher c;
++                try {
++                    c = Cipher.getInstance(algo, p);
++                } catch (NoSuchAlgorithmException nsae) {
++                    System.out.println("Skipping Unsupported CIP algo: " + algo);
++                    continue;
++                }
++                c.init(Cipher.ENCRYPT_MODE, key, (AlgorithmParameters)null, null);
++                byte[] eout = c.doFinal(in, 0, in.length);
++
++                AlgorithmParameters params = c.getParameters();
++                Cipher c2 = Cipher.getInstance(algo, interopP);
++                c2.init(Cipher.ENCRYPT_MODE, key, params, null);
++                byte[] eout2 = c2.doFinal(in, 0, in.length);
++
++                if (!Arrays.equals(eout, eout2)) {
++                    System.out.println(algo + ": DIFF FAILED");
++                    testPassed = false;
++                } else {
++                    System.out.println(algo + ": ENC Passed");
++                }
++
++                // check DEC
++                c.init(Cipher.DECRYPT_MODE, key, params, null);
++                byte[] dout = c.doFinal(eout);
++                c2.init(Cipher.DECRYPT_MODE, key, params, null);
++                byte[] dout2 = c2.doFinal(eout2);
++
++                if (!Arrays.equals(dout, dout2)) {
++                    System.out.println(algo + ": DIFF FAILED");
++                    testPassed = false;
++                } else {
++                    System.out.println(algo + ": DEC Passed");
++                }
++            } catch(Exception ex) {
++                System.out.println("Unexpected Exception: " + algo);
++                ex.printStackTrace();
++                testPassed = false;
++            }
++        }
++
++        if (!testPassed) {
++            throw new RuntimeException("One or more CIPHER test failed!");
++        } else {
++            System.out.println("CIPHER Interop Tests Passed");
++        }
++    }
++
++    private static void testCipherOffset(String[] algos, SecretKey key,
++                                         Provider p) {
++        boolean testPassed = true;
++        byte[] in = new byte[16];
++        (new SecureRandom()).nextBytes(in);
++
++        for (int i = 0; i < algos.length; i++) {
++            if (IS_BAD_SOLARIS
++                    && algos[i].indexOf("CFB128") != -1
++                    && p.getName().equals("OracleUcrypto")) {
++                System.out.println("Ignore cases on CFB128 due to a pre-S11.3 bug");
++                continue;
++            }
++
++            for (int j = 1; j < (in.length - 1); j++) {
++                System.out.println("Input offset size: " + j);
++
++                try {
++                    // check ENC
++                    Cipher c;
++                    try {
++                        c = Cipher.getInstance(algos[i], p);
++                    } catch (NoSuchAlgorithmException nsae) {
++                        System.out.println("Skip Unsupported CIP algo: " + algos[i]);
++                        continue;
++                    }
++                    c.init(Cipher.ENCRYPT_MODE, key, (AlgorithmParameters)null, null);
++                    byte[] eout = new byte[c.getOutputSize(in.length)];
++                    int firstPartLen = in.length - j - 1;
++                    //System.out.print("1st UPDATE: " + firstPartLen);
++                    int k = c.update(in, 0, firstPartLen, eout, 0);
++                    k += c.update(in, firstPartLen, 1, eout, k);
++                    k += c.doFinal(in, firstPartLen+1, j, eout, k);
++
++                    AlgorithmParameters params = c.getParameters();
++
++                    Cipher c2 = Cipher.getInstance(algos[i], p);
++                    c2.init(Cipher.ENCRYPT_MODE, key, params, null);
++                    byte[] eout2 = new byte[c2.getOutputSize(in.length)];
++                    int k2 = c2.update(in, 0, j, eout2, 0);
++                    k2 += c2.update(in, j, 1, eout2, k2);
++                    k2 += c2.doFinal(in, j+1, firstPartLen, eout2, k2);
++
++                    if (!checkArrays(eout, k, eout2, k2)) testPassed = false;
++
++                    // check DEC
++                    c.init(Cipher.DECRYPT_MODE, key, params, null);
++                    byte[] dout = new byte[c.getOutputSize(eout.length)];
++                    k = c.update(eout, 0, firstPartLen, dout, 0);
++                    k += c.update(eout, firstPartLen, 1, dout, k);
++                    k += c.doFinal(eout, firstPartLen+1, eout.length - firstPartLen - 1, dout, k);
++                    if (!checkArrays(in, in.length, dout, k)) testPassed = false;
++                } catch(Exception ex) {
++                    System.out.println("Unexpected Exception: " + algos[i]);
++                    ex.printStackTrace();
++                    testPassed = false;
++                }
++            }
++        }
++        if (!testPassed) {
++            throw new RuntimeException("One or more CIPHER test failed!");
++        } else {
++            System.out.println("CIPHER Offset Tests Passed");
++        }
++    }
++
++    private static void testCipherKeyWrapping(String[] algos, SecretKey key,
++                                              Provider p, Provider interopP)
++        throws NoSuchAlgorithmException {
++        boolean testPassed = true;
++
++        // Test SecretKey, PrivateKey and PublicKey
++        Key[] tbwKeys = new Key[3];
++        int[] tbwKeyTypes = { Cipher.SECRET_KEY, Cipher.PRIVATE_KEY, Cipher.PUBLIC_KEY };
++        tbwKeys[0] = new SecretKeySpec(new byte[20], "Blowfish");
++        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
++        kpg.initialize(1024);
++        KeyPair kp = kpg.generateKeyPair();
++        tbwKeys[1] = kp.getPrivate();
++        tbwKeys[2] = kp.getPublic();
++
++        for (int i = 0; i < algos.length; i++) {
++            try {
++                System.out.println(algos[i] + " - Native WRAP/Java UNWRAP");
++
++                Cipher c1;
++                try {
++                    c1 = Cipher.getInstance(algos[i], p);
++                } catch (NoSuchAlgorithmException nsae) {
++                    System.out.println("Skipping Unsupported CIP algo: " + algos[i]);
++                    continue;
++                }
++                c1.init(Cipher.WRAP_MODE, key, (AlgorithmParameters)null, null);
++                AlgorithmParameters params = c1.getParameters();
++                Cipher c2 = Cipher.getInstance(algos[i], interopP);
++                c2.init(Cipher.UNWRAP_MODE, key, params, null);
++
++                for (int j = 0; j < tbwKeys.length ; j++) {
++                    byte[] wrappedKey = c1.wrap(tbwKeys[j]);
++                    Key recovered = c2.unwrap(wrappedKey,
++                                              tbwKeys[j].getAlgorithm(), tbwKeyTypes[j]);
++                    if (!checkKeys(tbwKeys[j], recovered)) testPassed = false;
++                }
++
++                System.out.println(algos[i] + " - Java WRAP/Native UNWRAP");
++                c1 = Cipher.getInstance(algos[i], interopP);
++                c1.init(Cipher.WRAP_MODE, key, (AlgorithmParameters)null, null);
++                params = c1.getParameters();
++                c2 = Cipher.getInstance(algos[i], p);
++                c2.init(Cipher.UNWRAP_MODE, key, params, null);
++
++                for (int j = 0; j < tbwKeys.length ; j++) {
++                    byte[] wrappedKey = c1.wrap(tbwKeys[j]);
++                    Key recovered = c2.unwrap(wrappedKey,
++                                              tbwKeys[j].getAlgorithm(), tbwKeyTypes[j]);
++                    if (!checkKeys(tbwKeys[j], recovered)) testPassed = false;
++                }
++
++            } catch(Exception ex) {
++                System.out.println("Unexpected Exception: " + algos[i]);
++                ex.printStackTrace();
++                testPassed = false;
++            }
++        }
++        if (!testPassed) {
++            throw new RuntimeException("One or more CIPHER test failed!");
++        } else {
++            System.out.println("CIPHER KeyWrapping Tests Passed");
++        }
++    }
++
++    private static void testCipherGCM(SecretKey key,
++                                      Provider p) {
++        boolean testPassed = true;
++        byte[] in = new byte[16];
++        (new SecureRandom()).nextBytes(in);
++
++        byte[] iv = new byte[16];
++        (new SecureRandom()).nextBytes(iv);
++
++
++        String algo = "AES/GCM/NoPadding";
++        int tagLen[] = { 128, 120, 112, 104, 96, 64, 32 };
++
++        try {
++            Cipher c;
++            try {
++                c = Cipher.getInstance(algo, p);
++            } catch (NoSuchAlgorithmException nsae) {
++                System.out.println("Skipping Unsupported CIP algo: " + algo);
++                return;
++            }
++            for (int i = 0; i < tagLen.length; i++) {
++                // change iv value to pass the key+iv uniqueness cehck for
++                // GCM encryption
++                iv[0] += 1;
++                AlgorithmParameterSpec paramSpec = new GCMParameterSpec(tagLen[i], iv);
++                // check ENC
++                c.init(Cipher.ENCRYPT_MODE, key, paramSpec, null);
++                c.updateAAD(iv);
++                byte[] eout = c.doFinal(in, 0, in.length);
++
++                AlgorithmParameters param = c.getParameters();
++                // check DEC
++                c.init(Cipher.DECRYPT_MODE, key, param, null);
++                c.updateAAD(iv);
++                byte[] dout = c.doFinal(eout, 0, eout.length);
++
++                if (!Arrays.equals(dout, in)) {
++                    System.out.println(algo + ": PT and RT DIFF FAILED");
++                    testPassed = false;
++                } else {
++                    System.out.println(algo + ": tagLen " + tagLen[i] + " done");
++                }
++            }
++        } catch(Exception ex) {
++            System.out.println("Unexpected Exception: " + algo);
++            ex.printStackTrace();
++            testPassed = false;
++        }
++        if (!testPassed) {
++            throw new RuntimeException("One or more CIPHER test failed!");
++        } else {
++            System.out.println("CIPHER GCM Tests Passed");
++        }
++    }
++
++    private static boolean checkArrays(byte[] a1, int a1Len, byte[] a2, int a2Len) {
++        boolean equal = true;
++        if (a1Len != a2Len) {
++            System.out.println("DIFFERENT OUT LENGTH");
++            equal = false;
++        } else {
++            for (int p = 0; p < a1Len; p++) {
++                if (a1[p] != a2[p]) {
++                    System.out.println("DIFF FAILED");
++                    equal = false;
++                    break;
++                }
++            }
++        }
++        return equal;
++    }
++
++    private static boolean checkKeys(Key k1, Key k2) {
++        boolean equal = true;
++        if (!k1.getAlgorithm().equalsIgnoreCase(k2.getAlgorithm())) {
++            System.out.println("DIFFERENT Key Algorithm");
++            equal = false;
++        } else if (!k1.getFormat().equalsIgnoreCase(k2.getFormat())) {
++            System.out.println("DIFFERENT Key Format");
++            equal = false;
++        } else if (!Arrays.equals(k1.getEncoded(), k2.getEncoded())) {
++            System.out.println("DIFFERENT Key Encoding");
++            equal = false;
++        }
++        return equal;
++    }
++
++    // The cases on CFB128 mode have to be skipped on pre-S11.3.
++    private static boolean isBadSolaris() {
++        return Platform.isSolaris() && OSVersion.current().compareTo(new OSVersion(11, 3)) < 0;
++    }
++}
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/TestAlias.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestAlias.java
+--- a/test/jdk/com/oracle/security/ucrypto/TestAlias.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestAlias.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,64 @@
++/*
++ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++/*
++ * @test
++ * @bug 8043349
++ * @summary Ensure the cipher aliases of AES and RSA works correctly
++ */
++import java.io.*;
++import java.security.*;
++import java.security.spec.*;
++import java.util.*;
++import javax.crypto.*;
++import javax.crypto.spec.*;
++
++public class TestAlias extends UcryptoTest {
++
++    private static final String[] CIPHER_ALGOS = {
++        "AES/ECB/PKCS5Padding",
++        "AES",
++        "RSA/ECB/PKCS1Padding",
++        "RSA",
++    };
++
++    public static void main(String[] args) throws Exception {
++        main(new TestAlias(), null);
++    }
++
++    public void doTest(Provider prov) throws Exception {
++        Cipher c;
++        for (int i = 0; i < (CIPHER_ALGOS.length - 1); i+=2) {
++            String fullTransformation = CIPHER_ALGOS[i];
++            try {
++                c = Cipher.getInstance(fullTransformation, prov);
++            } catch (NoSuchAlgorithmException nsae) {
++                System.out.println("Skip unsupported algo: " + fullTransformation);
++                continue;
++            }
++            c = Cipher.getInstance(CIPHER_ALGOS[i+1], prov);
++        }
++
++        System.out.println("Test Passed");
++    }
++}
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/TestCICOWithGCM.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestCICOWithGCM.java
+--- a/test/jdk/com/oracle/security/ucrypto/TestCICOWithGCM.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestCICOWithGCM.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,104 @@
++/*
++ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++/*
++ * @test
++ * @bug 8014374
++ * @summary Test basic CipherInputStream/OutputStream func w/ GCM mode.
++ * @author Valerie Peng
++ * @key randomness
++ */
++
++import java.security.*;
++import javax.crypto.*;
++import javax.crypto.spec.*;
++import java.math.*;
++import java.io.*;
++
++import java.util.*;
++
++public class TestCICOWithGCM extends UcryptoTest {
++    public static void main(String[] args) throws Exception {
++        main(new TestCICOWithGCM(), null);
++    }
++
++    public void doTest(Provider p) throws Exception {
++        // check if GCM support exists
++        try {
++            Cipher.getInstance("AES/GCM/NoPadding", p);
++        } catch (NoSuchAlgorithmException nsae) {
++            System.out.println("Skipping Test due to no GCM support");
++            return;
++        }
++
++        Random rdm = new Random();
++
++        //init Secret Key
++        byte[] keyValue = new byte[16];
++        rdm.nextBytes(keyValue);
++        SecretKey key = new SecretKeySpec(keyValue, "AES");
++
++        //do initialization of the plainText
++        byte[] plainText = new byte[800];
++        rdm.nextBytes(plainText);
++
++        //init ciphers
++        Cipher encCipher = Cipher.getInstance("AES/GCM/NoPadding", p);
++        encCipher.init(Cipher.ENCRYPT_MODE, key);
++        Cipher decCipher = Cipher.getInstance("AES/GCM/NoPadding", p);
++        decCipher.init(Cipher.DECRYPT_MODE, key, encCipher.getParameters());
++
++        //init cipher streams
++        ByteArrayInputStream baInput = new ByteArrayInputStream(plainText);
++        CipherInputStream ciInput = new CipherInputStream(baInput, encCipher);
++        ByteArrayOutputStream baOutput = new ByteArrayOutputStream();
++        CipherOutputStream ciOutput = new CipherOutputStream(baOutput, decCipher);
++
++        //do test
++        byte[] buffer = new byte[800];
++        int len = ciInput.read(buffer);
++        System.out.println("read " + len + " bytes from input buffer");
++
++        while (len != -1) {
++            ciOutput.write(buffer, 0, len);
++            System.out.println("wite " + len + " bytes to output buffer");
++            len = ciInput.read(buffer);
++            if (len != -1) {
++                System.out.println("read " + len + " bytes from input buffer");
++            } else {
++                System.out.println("finished reading");
++            }
++        }
++
++        ciOutput.flush();
++        ciInput.close();
++        ciOutput.close();
++        byte[] recovered = baOutput.toByteArray();
++        System.out.println("recovered " + recovered.length + " bytes");
++        if (!Arrays.equals(plainText, recovered)) {
++            throw new RuntimeException("diff check failed!");
++        } else {
++            System.out.println("diff check passed");
++        }
++    }
++}
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/TestCICOWithGCMAndAAD.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestCICOWithGCMAndAAD.java
+--- a/test/jdk/com/oracle/security/ucrypto/TestCICOWithGCMAndAAD.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestCICOWithGCMAndAAD.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,122 @@
++/*
++ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++/*
++ * @test
++ * @bug 8014374
++ * @summary Test CipherInputStream/OutputStream func w/ GCM mode and AAD.
++ * @author Valerie Peng
++ * @key randomness
++ */
++
++import java.io.*;
++import java.security.*;
++import java.util.*;
++import javax.crypto.*;
++import javax.crypto.spec.*;
++
++public class TestCICOWithGCMAndAAD extends UcryptoTest {
++    public static void main(String[] args) throws Exception {
++        main(new TestCICOWithGCMAndAAD(), null);
++    }
++
++    public void doTest(Provider p) throws Exception {
++        // check if GCM support exists
++        try {
++            Cipher.getInstance("AES/GCM/NoPadding", p);
++        } catch (NoSuchAlgorithmException nsae) {
++            System.out.println("Skipping Test due to no GCM support");
++            return;
++        }
++
++        Random rdm = new Random();
++
++        //init Secret Key
++        byte[] keyValue = new byte[16];
++        rdm.nextBytes(keyValue);
++        SecretKey key = new SecretKeySpec(keyValue, "AES");
++
++        //Do initialization of the plainText
++        byte[] plainText = new byte[400];
++        rdm.nextBytes(plainText);
++
++        byte[] aad = new byte[128];
++        rdm.nextBytes(aad);
++        byte[] aad2 = aad.clone();
++        aad2[50]++;
++
++        byte[] iv = new byte[16];
++        rdm.nextBytes(iv);
++
++        GCMParameterSpec spec = new GCMParameterSpec(128, iv);
++        Cipher encCipher = Cipher.getInstance("AES/GCM/NoPadding", p);
++        encCipher.init(Cipher.ENCRYPT_MODE, key, spec);
++        encCipher.updateAAD(aad);
++        Cipher decCipher = Cipher.getInstance("AES/GCM/NoPadding", p);
++        decCipher.init(Cipher.DECRYPT_MODE, key, spec);  //encCipher.getParameters());
++        decCipher.updateAAD(aad);
++
++        byte[] recovered = test(encCipher, decCipher, plainText);
++        if (!Arrays.equals(plainText, recovered)) {
++            throw new Exception("sameAAD: diff check failed!");
++        } else System.out.println("sameAAD: passed");
++
++        encCipher.init(Cipher.ENCRYPT_MODE, key);
++        encCipher.updateAAD(aad2);
++        recovered = test(encCipher, decCipher, plainText);
++        if (recovered != null && recovered.length != 0) {
++            throw new Exception("diffAAD: no data should be returned!");
++        } else System.out.println("diffAAD: passed");
++   }
++
++   private static byte[] test(Cipher encCipher, Cipher decCipher, byte[] plainText)
++            throws Exception {
++        //init cipher streams
++        ByteArrayInputStream baInput = new ByteArrayInputStream(plainText);
++        CipherInputStream ciInput = new CipherInputStream(baInput, encCipher);
++        ByteArrayOutputStream baOutput = new ByteArrayOutputStream();
++        CipherOutputStream ciOutput = new CipherOutputStream(baOutput, decCipher);
++
++        //do test
++        byte[] buffer = new byte[200];
++        int len = ciInput.read(buffer);
++        System.out.println("read " + len + " bytes from input buffer");
++
++        while (len != -1) {
++            ciOutput.write(buffer, 0, len);
++            System.out.println("wite " + len + " bytes to output buffer");
++            len = ciInput.read(buffer);
++            if (len != -1) {
++                System.out.println("read " + len + " bytes from input buffer");
++            } else {
++                System.out.println("finished reading");
++            }
++        }
++
++        ciOutput.flush();
++        ciInput.close();
++        ciOutput.close();
++
++        return baOutput.toByteArray();
++    }
++}
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/TestDigest.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestDigest.java
+--- a/test/jdk/com/oracle/security/ucrypto/TestDigest.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestDigest.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,151 @@
++/*
++ * Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++/*
++ * @test
++ * @bug     7088989 8000415
++ * @summary Ensure the various message digests works correctly
++ * @key randomness
++ */
++
++import java.io.*;
++import java.security.*;
++import java.security.spec.*;
++import java.util.*;
++import javax.crypto.*;
++import javax.crypto.spec.*;
++
++public class TestDigest extends UcryptoTest {
++
++    private static final String[] MD_ALGOS = {
++        "MD5",
++        "SHA",
++        "SHA-224",
++        "SHA-256",
++        "SHA-384",
++        "SHA-512",
++        "SHA3-224",
++        "SHA3-256",
++        "SHA3-384",
++        "SHA3-512"
++    };
++
++    public static void main(String[] args) throws Exception {
++        main(new TestDigest(), null);
++    }
++
++    public void doTest(Provider p) throws Exception {
++        boolean testPassed = true;
++        byte[] msg = new byte[200];
++        (new SecureRandom()).nextBytes(msg);
++        String interopProvName = "SUN";
++
++        MessageDigest md, md2;
++
++        for (String a : MD_ALGOS) {
++            System.out.println("Testing " + a);
++            try {
++                md = MessageDigest.getInstance(a, p);
++            } catch (NoSuchAlgorithmException nsae) {
++                System.out.println("=> Skip, unsupported");
++                continue;
++            }
++            try {
++                md2 = MessageDigest.getInstance(a, interopProvName);
++            } catch (NoSuchAlgorithmException nsae) {
++                System.out.println("=> Skip, no interop provider found");
++                continue;
++            }
++
++            // Test Interoperability for update+digest calls
++            for (int i = 0; i < 3; i++) {
++                md.update(msg);
++                byte[] digest = md.digest();
++                md2.update(msg);
++                byte[] digest2 = md2.digest();
++                if (!Arrays.equals(digest, digest2)) {
++                    System.out.println("DIFF1 FAILED at iter " + i);
++                    testPassed = false;
++                } else {
++                    System.out.println("...diff1 test passed");
++                }
++            }
++
++            // Test Interoperability for digest calls
++            md = MessageDigest.getInstance(a, p);
++            md2 = MessageDigest.getInstance(a, interopProvName);
++
++            for (int i = 0; i < 3; i++) {
++                byte[] digest = md.digest();
++                byte[] digest2 = md2.digest();
++                if (!Arrays.equals(digest, digest2)) {
++                    System.out.println("DIFF2 FAILED at iter " + i);
++                    testPassed = false;
++                } else {
++                    System.out.println("...diff2 test passed");
++                }
++            }
++
++            // Test Cloning functionality if supported
++            md = MessageDigest.getInstance(a, p);
++            try {
++                md2 = (MessageDigest) md.clone(); // clone right after construction
++            } catch (CloneNotSupportedException cnse) {
++                System.out.println("...no clone support");
++                continue;
++            }
++            byte[] digest = md.digest();
++            byte[] digest2 = md2.digest();
++            if (!Arrays.equals(digest, digest2)) {
++                System.out.println("DIFF-3.1 FAILED");
++                testPassed = false;
++            } else {
++                System.out.println("...diff3.1 tests passed");
++            }
++            md.update(msg);
++            md2 = (MessageDigest) md.clone(); // clone again after update call
++            digest = md.digest();
++            digest2 = md2.digest();
++            if (!Arrays.equals(digest, digest2)) {
++                System.out.println("DIFF-3.2 FAILED");
++                testPassed = false;
++            } else {
++                System.out.println("...diff3.2 tests passed");
++            }
++            md2 = (MessageDigest) md.clone(); // clone after digest
++            digest = md.digest();
++            digest2 = md2.digest();
++            if (!Arrays.equals(digest, digest2)) {
++                System.out.println("DIFF-3.3 FAILED");
++                testPassed = false;
++            } else {
++                System.out.println("...diff3.3 tests passed");
++            }
++        }
++        if (!testPassed) {
++            throw new RuntimeException("One or more MD test failed!");
++        } else {
++            System.out.println("MD Tests Passed");
++        }
++    }
++}
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/TestGCMKeyAndIvCheck.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestGCMKeyAndIvCheck.java
+--- a/test/jdk/com/oracle/security/ucrypto/TestGCMKeyAndIvCheck.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestGCMKeyAndIvCheck.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,182 @@
++/*
++ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++/*
++ * @test
++ * @bug 8014374
++ * @summary Ensure that same key+iv can't be repeatedly used for encryption.
++ * @author Valerie Peng
++ */
++
++import java.security.*;
++import javax.crypto.*;
++import javax.crypto.spec.*;
++import java.math.*;
++
++import java.util.*;
++
++public class TestGCMKeyAndIvCheck extends UcryptoTest {
++
++    private static final byte[] AAD = new byte[5];
++    private static final byte[] PT = new byte[33];
++
++    private static void checkISE(Cipher c) throws Exception {
++        // Subsequent encryptions should fail
++        try {
++            c.updateAAD(AAD);
++            throw new Exception("Should throw ISE for updateAAD()");
++        } catch (IllegalStateException ise) {
++            // expected
++        }
++
++        try {
++            c.update(PT);
++            throw new Exception("Should throw ISE for update()");
++        } catch (IllegalStateException ise) {
++            // expected
++        }
++        try {
++            c.doFinal(PT);
++            throw new Exception("Should throw ISE for doFinal()");
++        } catch (IllegalStateException ise) {
++            // expected
++        }
++    }
++
++    public static void main(String[] args) throws Exception {
++        main(new TestGCMKeyAndIvCheck(), null);
++    }
++
++    public void doTest(Provider p) throws Exception {
++        Cipher c;
++        try {
++            c = Cipher.getInstance("AES/GCM/NoPadding", p);
++        } catch (NoSuchAlgorithmException nsae) {
++            System.out.println("Skipping Test due to No GCM support");
++            return;
++        }
++
++        SecretKey key = new SecretKeySpec(new byte[16], "AES");
++        // First try parameter-less init.
++        c.init(Cipher.ENCRYPT_MODE, key);
++        c.updateAAD(AAD);
++        byte[] ctPlusTag = c.doFinal(PT);
++
++        // subsequent encryption should fail unless re-init w/ different key+iv
++        checkISE(c);
++
++        // Validate the retrieved parameters against the IV and tag length.
++        AlgorithmParameters params = c.getParameters();
++        if (params == null) {
++            throw new Exception("getParameters() should not return null");
++        }
++        GCMParameterSpec spec = params.getParameterSpec(GCMParameterSpec.class);
++        if (spec.getTLen() != (ctPlusTag.length - PT.length)*8) {
++            throw new Exception("Parameters contains incorrect TLen value");
++        }
++        if (!Arrays.equals(spec.getIV(), c.getIV())) {
++            throw new Exception("Parameters contains incorrect IV value");
++        }
++
++        // Should be ok to use the same key+iv for decryption
++        c.init(Cipher.DECRYPT_MODE, key, params);
++        c.updateAAD(AAD);
++        byte[] recovered = c.doFinal(ctPlusTag);
++        if (!Arrays.equals(recovered, PT)) {
++            throw new Exception("decryption result mismatch");
++        }
++
++        // Now try to encrypt again using the same key+iv; should fail also
++        try {
++            c.init(Cipher.ENCRYPT_MODE, key, params);
++            throw new Exception("Should throw exception when same key+iv is used");
++        } catch (InvalidAlgorithmParameterException iape) {
++            // expected
++        }
++
++        // Now try to encrypt again using parameter-less init; should work
++        c.init(Cipher.ENCRYPT_MODE, key);
++        c.doFinal(PT);
++
++        // make sure a different iv is used
++        byte[] iv = c.getIV();
++        if (Arrays.equals(spec.getIV(), iv)) {
++            throw new Exception("IV should be different now");
++        }
++
++        // Now try to encrypt again using a different parameter; should work
++        byte[] rdm_iv = new byte[30];
++        Random rdm = new Random();
++        rdm.nextBytes(rdm_iv);
++
++        c.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(128, rdm_iv));
++        c.updateAAD(AAD);
++        c.doFinal(PT);
++        // subsequent encryption should fail unless re-init w/ different key+iv
++        checkISE(c);
++
++        // Now try decryption twice in a row; no re-init required and
++        // same parameters is used.
++        c.init(Cipher.DECRYPT_MODE, key, params);
++        c.updateAAD(AAD);
++        recovered = c.doFinal(ctPlusTag);
++
++        c.updateAAD(AAD);
++        recovered = c.doFinal(ctPlusTag);
++        if (!Arrays.equals(recovered, PT)) {
++            throw new Exception("decryption result mismatch");
++        }
++
++        // Now try decryption again and re-init using the same parameters
++        c.init(Cipher.DECRYPT_MODE, key, params);
++        c.updateAAD(AAD);
++        recovered = c.doFinal(ctPlusTag);
++
++        // init to decrypt w/o parameters; should fail with IKE as
++        // javadoc specified
++        try {
++            c.init(Cipher.DECRYPT_MODE, key);
++            throw new Exception("Should throw IKE for dec w/o params");
++        } catch (InvalidKeyException ike) {
++            // expected
++        }
++
++        // Lastly, try encryption AND decryption w/ wrong type of parameters,
++        // e.g. IvParameterSpec
++        try {
++            c.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(iv));
++            throw new Exception("Should throw IAPE");
++        } catch (InvalidAlgorithmParameterException iape) {
++            // expected
++        }
++        try {
++            c.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
++            throw new Exception("Should throw IAPE");
++        } catch (InvalidAlgorithmParameterException iape) {
++            // expected
++        }
++
++        System.out.println("Test Passed!");
++    }
++}
++
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/TestGCMKeyWrap.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestGCMKeyWrap.java
+--- a/test/jdk/com/oracle/security/ucrypto/TestGCMKeyWrap.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestGCMKeyWrap.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,87 @@
++/*
++ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++/*
++ * @test
++ * @bug 8014374
++ * @summary Ensure key wrap/unwrap works using AES/GCM/NoPadding
++ * @key randomness
++ */
++
++import java.io.*;
++import java.security.*;
++import java.security.spec.*;
++import java.util.*;
++import javax.crypto.*;
++import javax.crypto.spec.*;
++
++public class TestGCMKeyWrap extends UcryptoTest {
++
++    public static void main(String[] args) throws Exception {
++        main(new TestGCMKeyWrap(), null);
++    }
++
++    public void doTest(Provider p) throws Exception {
++        // check if GCM support exists
++        try {
++            Cipher.getInstance("AES/GCM/NoPadding", p);
++        } catch (NoSuchAlgorithmException nsae) {
++            System.out.println("Skipping Test due to no GCM support");
++            return;
++        }
++
++        Random rdm = new Random();
++
++        //init Secret Key
++        byte[] keyValue = new byte[16];
++        rdm.nextBytes(keyValue);
++        SecretKey key = new SecretKeySpec(keyValue, "AES");
++
++        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", p);
++        cipher.init(Cipher.WRAP_MODE, key);
++
++        byte[] wrappedKey = cipher.wrap(key);
++
++        try { // make sure ISE is thrown if re-using the same key/IV
++            wrappedKey = cipher.wrap(key);
++            throw new Exception("FAIL: expected ISE not thrown");
++        } catch(IllegalStateException ise){
++            System.out.println("Expected ISE thrown for re-wrapping");
++        }
++
++        //unwrap the key
++        AlgorithmParameters params = cipher.getParameters();
++        cipher.init(Cipher.UNWRAP_MODE, key, params);
++        Key unwrappedKey = cipher.unwrap(wrappedKey, "AES", Cipher.SECRET_KEY);
++
++        //check if we can unwrap second time
++        unwrappedKey = cipher.unwrap(wrappedKey, "AES", Cipher.SECRET_KEY);
++
++        // Comparison
++        if (!Arrays.equals(key.getEncoded(), unwrappedKey.getEncoded())) {
++            throw new Exception("FAIL: keys are not equal");
++        } else {
++            System.out.println("Passed key equality check");
++        }
++    }
++}
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/TestGCMWithSBE.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestGCMWithSBE.java
+--- a/test/jdk/com/oracle/security/ucrypto/TestGCMWithSBE.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestGCMWithSBE.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,112 @@
++/*
++ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++/*
++ * @test
++ * @bug 8036970
++ * @summary Ensure that Cipher object is still usable after SBE.
++ * @author Valerie Peng
++ */
++
++import java.security.*;
++import javax.crypto.*;
++import javax.crypto.spec.*;
++import java.math.*;
++
++import java.util.*;
++
++public class TestGCMWithSBE extends UcryptoTest {
++
++    private static final byte[] PT = new byte[32];
++    private static final byte[] ONE_BYTE = new byte[1];
++
++    public static void main(String[] args) throws Exception {
++        main(new TestGCMWithSBE(), null);
++    }
++
++    public void doTest(Provider p) throws Exception {
++        Cipher c;
++        try {
++            c = Cipher.getInstance("AES/GCM/NoPadding", p);
++        } catch (NoSuchAlgorithmException nsae) {
++            System.out.println("Skipping Test due to No GCM support");
++            return;
++        }
++
++        SecretKey key = new SecretKeySpec(new byte[16], "AES");
++        c.init(Cipher.ENCRYPT_MODE, key);
++
++        // test SBE with update calls
++        byte[] ct1 = null;
++        try {
++            c.update(PT, 0, PT.length, ONE_BYTE);
++        } catch (ShortBufferException sbe) {
++            // retry should work
++            ct1 = c.update(PT, 0, PT.length);
++        }
++
++        byte[] ct2PlusTag = null;
++        // test SBE with doFinal calls
++        try {
++            c.doFinal(ONE_BYTE, 0);
++        } catch (ShortBufferException sbe) {
++            // retry should work
++            ct2PlusTag = c.doFinal();
++        }
++
++        // Validate the retrieved parameters against the IV and tag length.
++        AlgorithmParameters params = c.getParameters();
++        if (params == null) {
++            throw new Exception("getParameters() should not return null");
++        }
++        GCMParameterSpec spec = params.getParameterSpec(GCMParameterSpec.class);
++        if (spec.getTLen() != (ct1.length + ct2PlusTag.length - PT.length)*8) {
++            throw new Exception("Parameters contains incorrect TLen value");
++        }
++        if (!Arrays.equals(spec.getIV(), c.getIV())) {
++            throw new Exception("Parameters contains incorrect IV value");
++        }
++
++        // Should be ok to use the same key+iv for decryption
++        c.init(Cipher.DECRYPT_MODE, key, params);
++        byte[] pt1 = c.update(ct1);
++        if (pt1 != null && pt1.length != 0) {
++            throw new Exception("Recovered text should not be returned "
++                + "to caller before tag verification");
++        }
++
++        byte[] pt2 = null;
++        try {
++            c.doFinal(ct2PlusTag, 0, ct2PlusTag.length, ONE_BYTE);
++        } catch (ShortBufferException sbe) {
++            // retry should work
++            pt2 = c.doFinal(ct2PlusTag);
++        }
++        if (!Arrays.equals(pt2, PT)) {
++            throw new Exception("decryption result mismatch");
++        }
++
++        System.out.println("Test Passed!");
++    }
++}
++
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/TestKATForGCM.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestKATForGCM.java
+--- a/test/jdk/com/oracle/security/ucrypto/TestKATForGCM.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestKATForGCM.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,304 @@
++/*
++ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++/*
++ * @test
++ * @bug 8014374
++ * @summary Known Answer Test for AES cipher with GCM mode
++ * @author Valerie Peng
++ */
++
++import java.security.*;
++import javax.crypto.*;
++import javax.crypto.spec.*;
++import java.math.*;
++
++import java.util.*;
++
++public class TestKATForGCM extends UcryptoTest {
++    public static void main(String[] args) throws Exception {
++        main(new TestKATForGCM(), null);
++    }
++
++    // Utility methods
++    private static byte[] HexToBytes(String hexVal) {
++        if (hexVal == null) return new byte[0];
++        byte[] result = new byte[hexVal.length()/2];
++        for (int i = 0; i < result.length; i++) {
++            // 2 characters at a time
++            String byteVal = hexVal.substring(2*i, 2*i +2);
++            result[i] = Integer.valueOf(byteVal, 16).byteValue();
++        }
++        return result;
++    }
++
++    private static class TestVector {
++        SecretKey key;
++        byte[] plainText;
++        byte[] aad;
++        byte[] cipherText;
++        byte[] tag;
++        GCMParameterSpec spec;
++        String info;
++
++        TestVector(String key, String iv, String pt, String aad,
++                   String ct, String tag) {
++            this.key = new SecretKeySpec(HexToBytes(key), "AES");
++            this.plainText = HexToBytes(pt);
++            this.aad = HexToBytes(aad);
++            this.cipherText = HexToBytes(ct);
++            this.tag = HexToBytes(tag);
++            this.spec = new GCMParameterSpec(this.tag.length * 8, HexToBytes(iv));
++            this.info = "key=" + key + ", iv=" + iv + ", pt=" + pt +
++                ",aad=" + aad + ", ct=" + ct + ", tag=" + tag;
++        }
++
++        public String toString() {
++            return info;
++        }
++    }
++
++    // These test vectors are found off NIST's CAVP page
++    // http://csrc.nist.gov/groups/STM/cavp/index.html
++    // inside the link named "GCM Test Vectors", i.e.
++    // http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip
++    // CAVS 14.0, set of test vectors w/ count = 0, keysize = 128
++    private static TestVector[] testValues = {
++        // 96-bit iv w/ 128/120/112/104/96-bit tags
++        // no plain text, no aad
++        new TestVector("11754cd72aec309bf52f7687212e8957",
++                       "3c819d9a9bed087615030b65",
++                       null, null, null,
++                       "250327c674aaf477aef2675748cf6971"),
++        new TestVector("272f16edb81a7abbea887357a58c1917",
++                       "794ec588176c703d3d2a7a07",
++                       null, null, null,
++                       "b6e6f197168f5049aeda32dafbdaeb"),
++        new TestVector("81b6844aab6a568c4556a2eb7eae752f",
++                       "ce600f59618315a6829bef4d",
++                       null, null, null,
++                       "89b43e9dbc1b4f597dbbc7655bb5"),
++        new TestVector("cde2f9a9b1a004165ef9dc981f18651b",
++                       "29512c29566c7322e1e33e8e",
++                       null, null, null,
++                       "2e58ce7dabd107c82759c66a75"),
++        new TestVector("b01e45cc3088aaba9fa43d81d481823f",
++                       "5a2c4a66468713456a4bd5e1",
++                       null, null, null,
++                       "014280f944f53c681164b2ff"),
++        // 96-bit iv w/ 128/120/112/104/96-bit tags
++        // no plain text, 16-byte aad
++        new TestVector("77be63708971c4e240d1cb79e8d77feb",
++                       "e0e00f19fed7ba0136a797f3",
++                       null,
++                       "7a43ec1d9c0a5a78a0b16533a6213cab",
++                       null,
++                       "209fcc8d3675ed938e9c7166709dd946"),
++        new TestVector("da0b615656135194ba6d3c851099bc48",
++                       "d39d4b4d3cc927885090e6c3",
++                       null,
++                       "e7e5e6f8dac913036cb2ff29e8625e0e",
++                       null,
++                       "ab967711a5770461724460b07237e2"),
++        new TestVector("7e0986937a88eef894235aba4a2f43b2",
++                       "92c4a631695907166b422d60",
++                       null,
++                       "85c185f8518f9f2cd597a8f9208fc76b",
++                       null,
++                       "3bb916b728df94fe9d1916736be1"),
++        new TestVector("c3db570d7f0c21e86b028f11465d1dc9",
++                       "f86970f58ceef89fc7cb679e",
++                       null,
++                       "c095240708c0f57c288d86090ae34ee1",
++                       null,
++                       "e043c52160d652e82c7262fcf4"),
++        new TestVector("bea48ae4980d27f357611014d4486625",
++                       "32bddb5c3aa998a08556454c",
++                       null,
++                       "8a50b0b8c7654bced884f7f3afda2ead",
++                       null,
++                       "8e0f6d8bf05ffebe6f500eb1"),
++        // 96-bit iv w/ 128/120/112/104/96-bit tags
++        // no plain text, 20-byte aad
++        new TestVector("2fb45e5b8f993a2bfebc4b15b533e0b4",
++                       "5b05755f984d2b90f94b8027",
++                       null,
++                       "e85491b2202caf1d7dce03b97e09331c32473941",
++                       null,
++                       "c75b7832b2a2d9bd827412b6ef5769db"),
++        new TestVector("9bf406339fcef9675bbcf156aa1a0661",
++                       "8be4a9543d40f542abacac95",
++                       null,
++                       "7167cbf56971793186333a6685bbd58d47d379b3",
++                       null,
++                       "5e7968d7bbd5ba58cfcc750e2ef8f1"),
++        new TestVector("a2e962fff70fd0f4d63be728b80556fc",
++                       "1fa7103483de43d09bc23db4",
++                       null,
++                       "2a58edf1d53f46e4e7ee5e77ee7aeb60fc360658",
++                       null,
++                       "fa37f2dbbefab1451eae1d0d74ca"),
++        new TestVector("6bf4fdce82926dcdfc52616ed5f23695",
++                       "cc0f5899a10615567e1193ed",
++                       null,
++                       "3340655592374c1da2f05aac3ee111014986107f",
++                       null,
++                       "8ad3385cce3b5e7c985908192c"),
++        new TestVector("4df7a13e43c3d7b66b1a72fac5ba398e",
++                       "97179a3a2d417908dcf0fb28",
++                       null,
++                       "cbb7fc0010c255661e23b07dbd804b1e06ae70ac",
++                       null,
++                       "37791edae6c137ea946cfb40"),
++        // 96-bit iv w/ 128-bit tags, 13/16/32/51-byte plain text, no aad
++        new TestVector("fe9bb47deb3a61e423c2231841cfd1fb",
++                       "4d328eb776f500a2f7fb47aa",
++                       "f1cc3818e421876bb6b8bbd6c9",
++                       null,
++                       "b88c5c1977b35b517b0aeae967",
++                       "43fd4727fe5cdb4b5b42818dea7ef8c9"),
++        new TestVector("7fddb57453c241d03efbed3ac44e371c",
++                       "ee283a3fc75575e33efd4887",
++                       "d5de42b461646c255c87bd2962d3b9a2",
++                       null,
++                       "2ccda4a5415cb91e135c2a0f78c9b2fd",
++                       "b36d1df9b9d5e596f83e8b7f52971cb3"),
++        new TestVector("9971071059abc009e4f2bd69869db338",
++                       "07a9a95ea3821e9c13c63251",
++                       "f54bc3501fed4f6f6dfb5ea80106df0bd836e6826225b75c0222f6e859b35983",
++                       null,
++                       "0556c159f84ef36cb1602b4526b12009c775611bffb64dc0d9ca9297cd2c6a01",
++                       "7870d9117f54811a346970f1de090c41"),
++        new TestVector("594157ec4693202b030f33798b07176d",
++                       "49b12054082660803a1df3df",
++
++"3feef98a976a1bd634f364ac428bb59cd51fb159ec1789946918dbd50ea6c9d594a3a31a5269b0da6936c29d063a5fa2cc8a1c",
++                      null,
++
++"c1b7a46a335f23d65b8db4008a49796906e225474f4fe7d39e55bf2efd97fd82d4167de082ae30fa01e465a601235d8d68bc69",
++                      "ba92d3661ce8b04687e8788d55417dc2"),
++        // 96-bit iv w/ 128-bit tags, 16-byte plain text, 16/20/48/90-byte aad
++        new TestVector("c939cc13397c1d37de6ae0e1cb7c423c",
++                       "b3d8cc017cbb89b39e0f67e2",
++                       "c3b3c41f113a31b73d9a5cd432103069",
++                       "24825602bd12a984e0092d3e448eda5f",
++                       "93fe7d9e9bfd10348a5606e5cafa7354",
++                       "0032a1dc85f1c9786925a2e71d8272dd"),
++        new TestVector("d4a22488f8dd1d5c6c19a7d6ca17964c",
++                       "f3d5837f22ac1a0425e0d1d5",
++                       "7b43016a16896497fb457be6d2a54122",
++                       "f1c5d424b83f96c6ad8cb28ca0d20e475e023b5a",
++                       "c2bd67eef5e95cac27e3b06e3031d0a8",
++                       "f23eacf9d1cdf8737726c58648826e9c"),
++        new TestVector("89850dd398e1f1e28443a33d40162664",
++                       "e462c58482fe8264aeeb7231",
++                       "2805cdefb3ef6cc35cd1f169f98da81a",
++"d74e99d1bdaa712864eec422ac507bddbe2b0d4633cd3dff29ce5059b49fe868526c59a2a3a604457bc2afea866e7606",
++                       "ba80e244b7fc9025cd031d0f63677e06",
++                       "d84a8c3eac57d1bb0e890a8f461d1065"),
++        new TestVector("bd7c5c63b7542b56a00ebe71336a1588",
++                       "87721f23ba9c3c8ea5571abc",
++                       "de15ddbb1e202161e8a79af6a55ac6f3",
++"a6ec8075a0d3370eb7598918f3b93e48444751624997b899a87fa6a9939f844e008aa8b70e9f4c3b1a19d3286bf543e7127bfecba1ad17a5ec53fccc26faecacc4c75369498eaa7d706aef634d0009279b11e4ba6c993e5e9ed9",
++                       "41eb28c0fee4d762de972361c863bc80",
++                       "9cb567220d0b252eb97bff46e4b00ff8"),
++        // 8/1024-bit iv w/ 128-bit tag, no plain text, no aad
++        new TestVector("1672c3537afa82004c6b8a46f6f0d026",
++                       "05",
++                       null, null, null,
++                       "8e2ad721f9455f74d8b53d3141f27e8e"),
++        new TestVector("d0f1f4defa1e8c08b4b26d576392027c",
++"42b4f01eb9f5a1ea5b1eb73b0fb0baed54f387ecaa0393c7d7dffc6af50146ecc021abf7eb9038d4303d91f8d741a11743166c0860208bcc02c6258fd9511a2fa626f96d60b72fcff773af4e88e7a923506e4916ecbd814651e9f445adef4ad6a6b6c7290cc13b956130eef5b837c939fcac0cbbcc9656cd75b13823ee5acdac",
++                       null, null, null,
++                       "7ab49b57ddf5f62c427950111c5c4f0d"),
++        // 8-bit iv w/ 128-bit tag, 13-byte plain text, 90-byte aad
++        new TestVector("9f79239f0904eace50784b863e723f6b",
++                       "d9",
++                       "bdb0bb10c87965acd34d146171",
++"44db436089327726c5f01139e1f339735c9e85514ccc2f167bad728010fb34a9072a9794c8a5e7361b1d0dbcdc9ac4091e354bb2896561f0486645252e9c78c86beece91bfa4f7cc4a8794ce1f305b1b735efdbf1ed1563c0be0",
++                       "7e5a7c8dadb3f0c7335b4d9d8d",
++                       "6b6ef1f53723a89f3bb7c6d043840717"),
++        // 1024-bit iv w/ 128-bit tag, 51-byte plain text, 48-byte aad
++        new TestVector("141f1ce91989b07e7eb6ae1dbd81ea5e",
++
++"49451da24bd6074509d3cebc2c0394c972e6934b45a1d91f3ce1d3ca69e194aa1958a7c21b6f21d530ce6d2cc5256a3f846b6f9d2f38df0102c4791e57df038f6e69085646007df999751e248e06c47245f4cd3b8004585a7470dee1690e9d2d63169a58d243c0b57b3e5b4a481a3e4e8c60007094ef3adea2e8f05dd3a1396f",
++"d384305af2388699aa302f510913fed0f2cb63ba42efa8c5c9de2922a2ec2fe87719dadf1eb0aef212b51e74c9c5b934104a43",
++"630cf18a91cc5a6481ac9eefd65c24b1a3c93396bd7294d6b8ba323951727666c947a21894a079ef061ee159c05beeb4",
++"f4c34e5fbe74c0297313268296cd561d59ccc95bbfcdfcdc71b0097dbd83240446b28dc088abd42b0fc687f208190ff24c0548",
++                      "dbb93bbb56d0439cd09f620a57687f5d"),
++    };
++
++    public void doTest(Provider p) throws Exception {
++        boolean testFailed = false;
++        Cipher c = null;
++        try {
++            c = Cipher.getInstance("AES/GCM/NoPadding", p);
++        } catch (NoSuchAlgorithmException nsae) {
++            System.out.println("Skipping Test due to no GCM support");
++            return;
++        }
++
++        for (int i = 0; i < testValues.length; i++) {
++            try {
++                c.init(Cipher.ENCRYPT_MODE, testValues[i].key, testValues[i].spec);
++                c.updateAAD(testValues[i].aad);
++                byte[] ctPlusTag = c.doFinal(testValues[i].plainText);
++
++                c.init(Cipher.DECRYPT_MODE, testValues[i].key, testValues[i].spec);
++                c.updateAAD(testValues[i].aad);
++                byte[] pt = c.doFinal(ctPlusTag); // should fail if tag mismatched
++
++                // check encryption/decryption results just to be sure
++                if (!Arrays.equals(testValues[i].plainText, pt)) {
++                    System.out.println("PlainText diff failed for test# " + i);
++                    testFailed = true;
++                }
++                int ctLen = testValues[i].cipherText.length;
++                if (!Arrays.equals(testValues[i].cipherText,
++                                   Arrays.copyOf(ctPlusTag, ctLen))) {
++                    System.out.println("CipherText diff failed for test# " + i);
++                    testFailed = true;
++                }
++                int tagLen = testValues[i].tag.length;
++                if (!Arrays.equals
++                    (testValues[i].tag,
++                     Arrays.copyOfRange(ctPlusTag, ctLen, ctLen+tagLen))) {
++                    System.out.println("Tag diff failed for test# " + i);
++                    testFailed = true;
++                }
++            } catch (Exception ex) {
++                // continue testing other test vectors
++                System.out.println("Failed Test Vector: " + testValues[i]);
++                ex.printStackTrace();
++                testFailed = true;
++                continue;
++            }
++        }
++        if (testFailed) {
++            throw new Exception("Test Failed");
++        }
++        // passed all tests...hooray!
++        System.out.println("Test Passed");
++    }
++}
++
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/TestMalformedRSA.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestMalformedRSA.java
+--- a/test/jdk/com/oracle/security/ucrypto/TestMalformedRSA.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestMalformedRSA.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,257 @@
++/*
++ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++/*
++ * @test
++ * @bug 8024606
++ * @summary NegativeArraySizeException in NativeRSACipher
++ */
++
++import java.io.*;
++import java.security.*;
++import java.security.spec.*;
++import java.util.*;
++import java.math.*;
++import javax.crypto.*;
++
++public class TestMalformedRSA extends UcryptoTest {
++
++    // KAT
++    private static final byte PLAINTEXT[] = Arrays.copyOf
++        (new String("Known plaintext message utilized" +
++                    "for RSA Encryption &  Decryption" +
++                    "block, SHA1, SHA256, SHA384  and" +
++                    "SHA512 RSA Signature KAT tests.").getBytes(), 128);
++
++    private static final byte MOD[] = {
++        (byte)0xd5, (byte)0x84, (byte)0x95, (byte)0x07, (byte)0xf4, (byte)0xd0,
++        (byte)0x1f, (byte)0x82, (byte)0xf3, (byte)0x79, (byte)0xf4, (byte)0x99,
++        (byte)0x48, (byte)0x10, (byte)0xe1, (byte)0x71, (byte)0xa5, (byte)0x62,
++        (byte)0x22, (byte)0xa3, (byte)0x4b, (byte)0x00, (byte)0xe3, (byte)0x5b,
++        (byte)0x3a, (byte)0xcc, (byte)0x10, (byte)0x83, (byte)0xe0, (byte)0xaf,
++        (byte)0x61, (byte)0x13, (byte)0x54, (byte)0x6a, (byte)0xa2, (byte)0x6a,
++        (byte)0x2c, (byte)0x5e, (byte)0xb3, (byte)0xcc, (byte)0xa3, (byte)0x71,
++        (byte)0x9a, (byte)0xb2, (byte)0x3e, (byte)0x78, (byte)0xec, (byte)0xb5,
++        (byte)0x0e, (byte)0x6e, (byte)0x31, (byte)0x3b, (byte)0x77, (byte)0x1f,
++        (byte)0x6e, (byte)0x94, (byte)0x41, (byte)0x60, (byte)0xd5, (byte)0x6e,
++        (byte)0xd9, (byte)0xc6, (byte)0xf9, (byte)0x29, (byte)0xc3, (byte)0x40,
++        (byte)0x36, (byte)0x25, (byte)0xdb, (byte)0xea, (byte)0x0b, (byte)0x07,
++        (byte)0xae, (byte)0x76, (byte)0xfd, (byte)0x99, (byte)0x29, (byte)0xf4,
++        (byte)0x22, (byte)0xc1, (byte)0x1a, (byte)0x8f, (byte)0x05, (byte)0xfe,
++        (byte)0x98, (byte)0x09, (byte)0x07, (byte)0x05, (byte)0xc2, (byte)0x0f,
++        (byte)0x0b, (byte)0x11, (byte)0x83, (byte)0x39, (byte)0xca, (byte)0xc7,
++        (byte)0x43, (byte)0x63, (byte)0xff, (byte)0x33, (byte)0x80, (byte)0xe7,
++        (byte)0xc3, (byte)0x78, (byte)0xae, (byte)0xf1, (byte)0x73, (byte)0x52,
++        (byte)0x98, (byte)0x1d, (byte)0xde, (byte)0x5c, (byte)0x53, (byte)0x6e,
++        (byte)0x01, (byte)0x73, (byte)0x0d, (byte)0x12, (byte)0x7e, (byte)0x77,
++        (byte)0x03, (byte)0xf1, (byte)0xef, (byte)0x1b, (byte)0xc8, (byte)0xa8,
++        (byte)0x0f, (byte)0x97
++    };
++
++    private static final byte PUB_EXP[] = {(byte)0x01, (byte)0x00, (byte)0x01};
++
++    private static final byte PRIV_EXP[] = {
++        (byte)0x85, (byte)0x27, (byte)0x47, (byte)0x61, (byte)0x4c, (byte)0xd4,
++        (byte)0xb5, (byte)0xb2, (byte)0x0e, (byte)0x70, (byte)0x91, (byte)0x8f,
++        (byte)0x3d, (byte)0x97, (byte)0xf9, (byte)0x5f, (byte)0xcc, (byte)0x09,
++        (byte)0x65, (byte)0x1c, (byte)0x7c, (byte)0x5b, (byte)0xb3, (byte)0x6d,
++        (byte)0x63, (byte)0x3f, (byte)0x7b, (byte)0x55, (byte)0x22, (byte)0xbb,
++        (byte)0x7c, (byte)0x48, (byte)0x77, (byte)0xae, (byte)0x80, (byte)0x56,
++        (byte)0xc2, (byte)0x10, (byte)0xd5, (byte)0x03, (byte)0xdb, (byte)0x31,
++        (byte)0xaf, (byte)0x8d, (byte)0x54, (byte)0xd4, (byte)0x48, (byte)0x99,
++        (byte)0xa8, (byte)0xc4, (byte)0x23, (byte)0x43, (byte)0xb8, (byte)0x48,
++        (byte)0x0b, (byte)0xc7, (byte)0xbc, (byte)0xf5, (byte)0xcc, (byte)0x64,
++        (byte)0x72, (byte)0xbf, (byte)0x59, (byte)0x06, (byte)0x04, (byte)0x1c,
++        (byte)0x32, (byte)0xf5, (byte)0x14, (byte)0x2e, (byte)0x6e, (byte)0xe2,
++        (byte)0x0f, (byte)0x5c, (byte)0xde, (byte)0x36, (byte)0x3c, (byte)0x6e,
++        (byte)0x7c, (byte)0x4d, (byte)0xcc, (byte)0xd3, (byte)0x00, (byte)0x6e,
++        (byte)0xe5, (byte)0x45, (byte)0x46, (byte)0xef, (byte)0x4d, (byte)0x25,
++        (byte)0x46, (byte)0x6d, (byte)0x7f, (byte)0xed, (byte)0xbb, (byte)0x4f,
++        (byte)0x4d, (byte)0x9f, (byte)0xda, (byte)0x87, (byte)0x47, (byte)0x8f,
++        (byte)0x74, (byte)0x44, (byte)0xb7, (byte)0xbe, (byte)0x9d, (byte)0xf5,
++        (byte)0xdd, (byte)0xd2, (byte)0x4c, (byte)0xa5, (byte)0xab, (byte)0x74,
++        (byte)0xe5, (byte)0x29, (byte)0xa1, (byte)0xd2, (byte)0x45, (byte)0x3b,
++        (byte)0x33, (byte)0xde, (byte)0xd5, (byte)0xae, (byte)0xf7, (byte)0x03,
++        (byte)0x10, (byte)0x21
++    };
++
++    private static final byte PRIME_P[] = {
++        (byte)0xf9, (byte)0x74, (byte)0x8f, (byte)0x16, (byte)0x02, (byte)0x6b,
++        (byte)0xa0, (byte)0xee, (byte)0x7f, (byte)0x28, (byte)0x97, (byte)0x91,
++        (byte)0xdc, (byte)0xec, (byte)0xc0, (byte)0x7c, (byte)0x49, (byte)0xc2,
++        (byte)0x85, (byte)0x76, (byte)0xee, (byte)0x66, (byte)0x74, (byte)0x2d,
++        (byte)0x1a, (byte)0xb8, (byte)0xf7, (byte)0x2f, (byte)0x11, (byte)0x5b,
++        (byte)0x36, (byte)0xd8, (byte)0x46, (byte)0x33, (byte)0x3b, (byte)0xd8,
++        (byte)0xf3, (byte)0x2d, (byte)0xa1, (byte)0x03, (byte)0x83, (byte)0x2b,
++        (byte)0xec, (byte)0x35, (byte)0x43, (byte)0x32, (byte)0xff, (byte)0xdd,
++        (byte)0x81, (byte)0x7c, (byte)0xfd, (byte)0x65, (byte)0x13, (byte)0x04,
++        (byte)0x7c, (byte)0xfc, (byte)0x03, (byte)0x97, (byte)0xf0, (byte)0xd5,
++        (byte)0x62, (byte)0xdc, (byte)0x0d, (byte)0xbf
++    };
++
++    private static final byte PRIME_Q[] = {
++        (byte)0xdb, (byte)0x1e, (byte)0xa7, (byte)0x3d, (byte)0xe7, (byte)0xfa,
++        (byte)0x8b, (byte)0x04, (byte)0x83, (byte)0x48, (byte)0xf3, (byte)0xa5,
++        (byte)0x31, (byte)0x9d, (byte)0x35, (byte)0x5e, (byte)0x4d, (byte)0x54,
++        (byte)0x77, (byte)0xcc, (byte)0x84, (byte)0x09, (byte)0xf3, (byte)0x11,
++        (byte)0x0d, (byte)0x54, (byte)0xed, (byte)0x85, (byte)0x39, (byte)0xa9,
++        (byte)0xca, (byte)0xa8, (byte)0xea, (byte)0xae, (byte)0x19, (byte)0x9c,
++        (byte)0x75, (byte)0xdb, (byte)0x88, (byte)0xb8, (byte)0x04, (byte)0x8d,
++        (byte)0x54, (byte)0xc6, (byte)0xa4, (byte)0x80, (byte)0xf8, (byte)0x93,
++        (byte)0xf0, (byte)0xdb, (byte)0x19, (byte)0xef, (byte)0xd7, (byte)0x87,
++        (byte)0x8a, (byte)0x8f, (byte)0x5a, (byte)0x09, (byte)0x2e, (byte)0x54,
++        (byte)0xf3, (byte)0x45, (byte)0x24, (byte)0x29
++    };
++
++    private static final byte EXP_P[] = {
++        (byte)0x6a, (byte)0xd1, (byte)0x25, (byte)0x80, (byte)0x18, (byte)0x33,
++        (byte)0x3c, (byte)0x2b, (byte)0x44, (byte)0x19, (byte)0xfe, (byte)0xa5,
++        (byte)0x40, (byte)0x03, (byte)0xc4, (byte)0xfc, (byte)0xb3, (byte)0x9c,
++        (byte)0xef, (byte)0x07, (byte)0x99, (byte)0x58, (byte)0x17, (byte)0xc1,
++        (byte)0x44, (byte)0xa3, (byte)0x15, (byte)0x7d, (byte)0x7b, (byte)0x22,
++        (byte)0x22, (byte)0xdf, (byte)0x03, (byte)0x58, (byte)0x66, (byte)0xf5,
++        (byte)0x24, (byte)0x54, (byte)0x52, (byte)0x91, (byte)0x2d, (byte)0x76,
++        (byte)0xfe, (byte)0x63, (byte)0x64, (byte)0x4e, (byte)0x0f, (byte)0x50,
++        (byte)0x2b, (byte)0x65, (byte)0x79, (byte)0x1f, (byte)0xf1, (byte)0xbf,
++        (byte)0xc7, (byte)0x41, (byte)0x26, (byte)0xcc, (byte)0xc6, (byte)0x1c,
++        (byte)0xa9, (byte)0x83, (byte)0x6f, (byte)0x03
++    };
++
++    private static final byte EXP_Q[] = {
++        (byte)0x12, (byte)0x84, (byte)0x1a, (byte)0x99, (byte)0xce, (byte)0x9a,
++        (byte)0x8b, (byte)0x58, (byte)0xcc, (byte)0x47, (byte)0x43, (byte)0xdf,
++        (byte)0x77, (byte)0xbb, (byte)0xd3, (byte)0x20, (byte)0xae, (byte)0xe4,
++        (byte)0x2e, (byte)0x63, (byte)0x67, (byte)0xdc, (byte)0xf7, (byte)0x5f,
++        (byte)0x3f, (byte)0x83, (byte)0x27, (byte)0xb7, (byte)0x14, (byte)0x52,
++        (byte)0x56, (byte)0xbf, (byte)0xc3, (byte)0x65, (byte)0x06, (byte)0xe1,
++        (byte)0x03, (byte)0xcc, (byte)0x93, (byte)0x57, (byte)0x09, (byte)0x7b,
++        (byte)0x6f, (byte)0xe8, (byte)0x81, (byte)0x4a, (byte)0x2c, (byte)0xb7,
++        (byte)0x43, (byte)0xa9, (byte)0x20, (byte)0x1d, (byte)0xf6, (byte)0x56,
++        (byte)0x8b, (byte)0xcc, (byte)0xe5, (byte)0x4c, (byte)0xd5, (byte)0x4f,
++        (byte)0x74, (byte)0x67, (byte)0x29, (byte)0x51
++    };
++
++    private static final byte CRT_COEFF[] = {
++        (byte)0x23, (byte)0xab, (byte)0xf4, (byte)0x03, (byte)0x2f, (byte)0x29,
++        (byte)0x95, (byte)0x74, (byte)0xac, (byte)0x1a, (byte)0x33, (byte)0x96,
++        (byte)0x62, (byte)0xed, (byte)0xf7, (byte)0xf6, (byte)0xae, (byte)0x07,
++        (byte)0x2a, (byte)0x2e, (byte)0xe8, (byte)0xab, (byte)0xfb, (byte)0x1e,
++        (byte)0xb9, (byte)0xb2, (byte)0x88, (byte)0x1e, (byte)0x85, (byte)0x05,
++        (byte)0x42, (byte)0x64, (byte)0x03, (byte)0xb2, (byte)0x8b, (byte)0xc1,
++        (byte)0x81, (byte)0x75, (byte)0xd7, (byte)0xba, (byte)0xaa, (byte)0xd4,
++        (byte)0x31, (byte)0x3c, (byte)0x8a, (byte)0x96, (byte)0x23, (byte)0x9d,
++        (byte)0x3f, (byte)0x06, (byte)0x3e, (byte)0x44, (byte)0xa9, (byte)0x62,
++        (byte)0x2f, (byte)0x61, (byte)0x5a, (byte)0x51, (byte)0x82, (byte)0x2c,
++        (byte)0x04, (byte)0x85, (byte)0x73, (byte)0xd1
++    };
++
++    private static KeyPair genPredefinedRSAKeyPair() throws Exception {
++        KeyFactory kf = KeyFactory.getInstance("RSA");
++        BigInteger mod = new BigInteger(MOD);
++        BigInteger pub = new BigInteger(PUB_EXP);
++
++        PrivateKey privKey = kf.generatePrivate
++            (new RSAPrivateCrtKeySpec
++             (mod, pub, new BigInteger(PRIV_EXP),
++              new BigInteger(PRIME_P), new BigInteger(PRIME_Q),
++              new BigInteger(EXP_P), new BigInteger(EXP_Q),
++              new BigInteger(CRT_COEFF)));
++        PublicKey pubKey = kf.generatePublic(new RSAPublicKeySpec(mod, pub));
++        return new KeyPair(pubKey, privKey);
++    }
++
++    private static final String CIP_ALGOS[] = {
++        "RSA/ECB/NoPadding",
++        "RSA/ECB/PKCS1Padding"
++    };
++    private static final int INPUT_SIZE_REDUCTION[] = {
++        0,
++        11,
++    };
++
++    private static KeyPair kp[] = null;
++
++    public static void main(String argv[]) throws Exception {
++        main(new TestMalformedRSA(), null);
++    }
++
++    public void doTest(Provider prov) throws Exception {
++        // first test w/ predefine KeyPair
++        KeyPair pkp = genPredefinedRSAKeyPair();
++        System.out.println("Test against Predefined RSA Key Pair");
++        testCipher(pkp, 128, false, prov);
++    }
++
++
++    private static void testCipher(KeyPair kp, int inputSizeInBytes,
++                                   boolean checkInterop, Provider prov)
++        throws Exception {
++        Cipher c1, c2;
++        for (int i = 0; i < CIP_ALGOS.length; i++) {
++            String algo = CIP_ALGOS[i];
++            try {
++                c1 = Cipher.getInstance(algo, prov);
++            } catch (NoSuchAlgorithmException nsae) {
++                System.out.println("Skip unsupported Cipher algo: " + algo);
++                continue;
++            }
++
++            if (checkInterop) {
++                c2 = Cipher.getInstance(algo, "SunJCE");
++            } else {
++                c2 = Cipher.getInstance(algo, prov);
++            }
++            byte[] data = Arrays.copyOf
++                 (PLAINTEXT, inputSizeInBytes - INPUT_SIZE_REDUCTION[i]);
++
++            testEncryption(c1, c2, kp, data);
++        }
++    }
++
++    private static void testEncryption(Cipher c1, Cipher c2,
++            KeyPair kp, byte[] data) throws Exception {
++
++        // C1 Encrypt + C2 Decrypt
++        byte[] out1 = null;
++        byte[] recoveredText = null;
++        try {
++            c1.init(Cipher.ENCRYPT_MODE, kp.getPublic());
++            out1 = c1.doFinal(data);
++
++            // damage the cipher text
++            out1[out1.length - 1] = (byte)(out1[out1.length - 1] ^ 0xFF);
++
++            c2.init(Cipher.DECRYPT_MODE, kp.getPrivate());
++            recoveredText = c2.doFinal(out1);
++
++            // Note that decryption of "RSA/ECB/NoPadding" don't throw
++            // BadPaddingException
++            System.out.println("\t=> PASS: " + c2.getAlgorithm());
++        } catch (BadPaddingException ex) {
++            System.out.println("\tDEC ERROR: " + c2.getAlgorithm());
++            System.out.println("\t=> PASS: expected BadPaddingException");
++            ex.printStackTrace();
++        }
++
++    }
++}
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/TestRSA.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestRSA.java
+--- a/test/jdk/com/oracle/security/ucrypto/TestRSA.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/TestRSA.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,438 @@
++/*
++ * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++/*
++ * @test
++ * @bug     7088989
++ * @summary Ensure the RSA ciphers and signatures works correctly
++ */
++
++import java.io.*;
++import java.security.*;
++import java.security.spec.*;
++import java.util.*;
++import java.math.*;
++import javax.crypto.*;
++
++public class TestRSA extends UcryptoTest {
++
++    // KAT
++    private static final byte PLAINTEXT[] = Arrays.copyOf
++        (new String("Known plaintext message utilized" +
++                    "for RSA Encryption &  Decryption" +
++                    "block, SHA1, SHA256, SHA384  and" +
++                    "SHA512 RSA Signature KAT tests.").getBytes(), 128);
++
++    private static final byte MOD[] = {
++        (byte)0xd5, (byte)0x84, (byte)0x95, (byte)0x07, (byte)0xf4, (byte)0xd0,
++        (byte)0x1f, (byte)0x82, (byte)0xf3, (byte)0x79, (byte)0xf4, (byte)0x99,
++        (byte)0x48, (byte)0x10, (byte)0xe1, (byte)0x71, (byte)0xa5, (byte)0x62,
++        (byte)0x22, (byte)0xa3, (byte)0x4b, (byte)0x00, (byte)0xe3, (byte)0x5b,
++        (byte)0x3a, (byte)0xcc, (byte)0x10, (byte)0x83, (byte)0xe0, (byte)0xaf,
++        (byte)0x61, (byte)0x13, (byte)0x54, (byte)0x6a, (byte)0xa2, (byte)0x6a,
++        (byte)0x2c, (byte)0x5e, (byte)0xb3, (byte)0xcc, (byte)0xa3, (byte)0x71,
++        (byte)0x9a, (byte)0xb2, (byte)0x3e, (byte)0x78, (byte)0xec, (byte)0xb5,
++        (byte)0x0e, (byte)0x6e, (byte)0x31, (byte)0x3b, (byte)0x77, (byte)0x1f,
++        (byte)0x6e, (byte)0x94, (byte)0x41, (byte)0x60, (byte)0xd5, (byte)0x6e,
++        (byte)0xd9, (byte)0xc6, (byte)0xf9, (byte)0x29, (byte)0xc3, (byte)0x40,
++        (byte)0x36, (byte)0x25, (byte)0xdb, (byte)0xea, (byte)0x0b, (byte)0x07,
++        (byte)0xae, (byte)0x76, (byte)0xfd, (byte)0x99, (byte)0x29, (byte)0xf4,
++        (byte)0x22, (byte)0xc1, (byte)0x1a, (byte)0x8f, (byte)0x05, (byte)0xfe,
++        (byte)0x98, (byte)0x09, (byte)0x07, (byte)0x05, (byte)0xc2, (byte)0x0f,
++        (byte)0x0b, (byte)0x11, (byte)0x83, (byte)0x39, (byte)0xca, (byte)0xc7,
++        (byte)0x43, (byte)0x63, (byte)0xff, (byte)0x33, (byte)0x80, (byte)0xe7,
++        (byte)0xc3, (byte)0x78, (byte)0xae, (byte)0xf1, (byte)0x73, (byte)0x52,
++        (byte)0x98, (byte)0x1d, (byte)0xde, (byte)0x5c, (byte)0x53, (byte)0x6e,
++        (byte)0x01, (byte)0x73, (byte)0x0d, (byte)0x12, (byte)0x7e, (byte)0x77,
++        (byte)0x03, (byte)0xf1, (byte)0xef, (byte)0x1b, (byte)0xc8, (byte)0xa8,
++        (byte)0x0f, (byte)0x97
++    };
++
++    private static final byte PUB_EXP[] = {(byte)0x01, (byte)0x00, (byte)0x01};
++
++    private static final byte PRIV_EXP[] = {
++        (byte)0x85, (byte)0x27, (byte)0x47, (byte)0x61, (byte)0x4c, (byte)0xd4,
++        (byte)0xb5, (byte)0xb2, (byte)0x0e, (byte)0x70, (byte)0x91, (byte)0x8f,
++        (byte)0x3d, (byte)0x97, (byte)0xf9, (byte)0x5f, (byte)0xcc, (byte)0x09,
++        (byte)0x65, (byte)0x1c, (byte)0x7c, (byte)0x5b, (byte)0xb3, (byte)0x6d,
++        (byte)0x63, (byte)0x3f, (byte)0x7b, (byte)0x55, (byte)0x22, (byte)0xbb,
++        (byte)0x7c, (byte)0x48, (byte)0x77, (byte)0xae, (byte)0x80, (byte)0x56,
++        (byte)0xc2, (byte)0x10, (byte)0xd5, (byte)0x03, (byte)0xdb, (byte)0x31,
++        (byte)0xaf, (byte)0x8d, (byte)0x54, (byte)0xd4, (byte)0x48, (byte)0x99,
++        (byte)0xa8, (byte)0xc4, (byte)0x23, (byte)0x43, (byte)0xb8, (byte)0x48,
++        (byte)0x0b, (byte)0xc7, (byte)0xbc, (byte)0xf5, (byte)0xcc, (byte)0x64,
++        (byte)0x72, (byte)0xbf, (byte)0x59, (byte)0x06, (byte)0x04, (byte)0x1c,
++        (byte)0x32, (byte)0xf5, (byte)0x14, (byte)0x2e, (byte)0x6e, (byte)0xe2,
++        (byte)0x0f, (byte)0x5c, (byte)0xde, (byte)0x36, (byte)0x3c, (byte)0x6e,
++        (byte)0x7c, (byte)0x4d, (byte)0xcc, (byte)0xd3, (byte)0x00, (byte)0x6e,
++        (byte)0xe5, (byte)0x45, (byte)0x46, (byte)0xef, (byte)0x4d, (byte)0x25,
++        (byte)0x46, (byte)0x6d, (byte)0x7f, (byte)0xed, (byte)0xbb, (byte)0x4f,
++        (byte)0x4d, (byte)0x9f, (byte)0xda, (byte)0x87, (byte)0x47, (byte)0x8f,
++        (byte)0x74, (byte)0x44, (byte)0xb7, (byte)0xbe, (byte)0x9d, (byte)0xf5,
++        (byte)0xdd, (byte)0xd2, (byte)0x4c, (byte)0xa5, (byte)0xab, (byte)0x74,
++        (byte)0xe5, (byte)0x29, (byte)0xa1, (byte)0xd2, (byte)0x45, (byte)0x3b,
++        (byte)0x33, (byte)0xde, (byte)0xd5, (byte)0xae, (byte)0xf7, (byte)0x03,
++        (byte)0x10, (byte)0x21
++    };
++
++    private static final byte PRIME_P[] = {
++        (byte)0xf9, (byte)0x74, (byte)0x8f, (byte)0x16, (byte)0x02, (byte)0x6b,
++        (byte)0xa0, (byte)0xee, (byte)0x7f, (byte)0x28, (byte)0x97, (byte)0x91,
++        (byte)0xdc, (byte)0xec, (byte)0xc0, (byte)0x7c, (byte)0x49, (byte)0xc2,
++        (byte)0x85, (byte)0x76, (byte)0xee, (byte)0x66, (byte)0x74, (byte)0x2d,
++        (byte)0x1a, (byte)0xb8, (byte)0xf7, (byte)0x2f, (byte)0x11, (byte)0x5b,
++        (byte)0x36, (byte)0xd8, (byte)0x46, (byte)0x33, (byte)0x3b, (byte)0xd8,
++        (byte)0xf3, (byte)0x2d, (byte)0xa1, (byte)0x03, (byte)0x83, (byte)0x2b,
++        (byte)0xec, (byte)0x35, (byte)0x43, (byte)0x32, (byte)0xff, (byte)0xdd,
++        (byte)0x81, (byte)0x7c, (byte)0xfd, (byte)0x65, (byte)0x13, (byte)0x04,
++        (byte)0x7c, (byte)0xfc, (byte)0x03, (byte)0x97, (byte)0xf0, (byte)0xd5,
++        (byte)0x62, (byte)0xdc, (byte)0x0d, (byte)0xbf
++    };
++
++    private static final byte PRIME_Q[] = {
++        (byte)0xdb, (byte)0x1e, (byte)0xa7, (byte)0x3d, (byte)0xe7, (byte)0xfa,
++        (byte)0x8b, (byte)0x04, (byte)0x83, (byte)0x48, (byte)0xf3, (byte)0xa5,
++        (byte)0x31, (byte)0x9d, (byte)0x35, (byte)0x5e, (byte)0x4d, (byte)0x54,
++        (byte)0x77, (byte)0xcc, (byte)0x84, (byte)0x09, (byte)0xf3, (byte)0x11,
++        (byte)0x0d, (byte)0x54, (byte)0xed, (byte)0x85, (byte)0x39, (byte)0xa9,
++        (byte)0xca, (byte)0xa8, (byte)0xea, (byte)0xae, (byte)0x19, (byte)0x9c,
++        (byte)0x75, (byte)0xdb, (byte)0x88, (byte)0xb8, (byte)0x04, (byte)0x8d,
++        (byte)0x54, (byte)0xc6, (byte)0xa4, (byte)0x80, (byte)0xf8, (byte)0x93,
++        (byte)0xf0, (byte)0xdb, (byte)0x19, (byte)0xef, (byte)0xd7, (byte)0x87,
++        (byte)0x8a, (byte)0x8f, (byte)0x5a, (byte)0x09, (byte)0x2e, (byte)0x54,
++        (byte)0xf3, (byte)0x45, (byte)0x24, (byte)0x29
++    };
++
++    private static final byte EXP_P[] = {
++        (byte)0x6a, (byte)0xd1, (byte)0x25, (byte)0x80, (byte)0x18, (byte)0x33,
++        (byte)0x3c, (byte)0x2b, (byte)0x44, (byte)0x19, (byte)0xfe, (byte)0xa5,
++        (byte)0x40, (byte)0x03, (byte)0xc4, (byte)0xfc, (byte)0xb3, (byte)0x9c,
++        (byte)0xef, (byte)0x07, (byte)0x99, (byte)0x58, (byte)0x17, (byte)0xc1,
++        (byte)0x44, (byte)0xa3, (byte)0x15, (byte)0x7d, (byte)0x7b, (byte)0x22,
++        (byte)0x22, (byte)0xdf, (byte)0x03, (byte)0x58, (byte)0x66, (byte)0xf5,
++        (byte)0x24, (byte)0x54, (byte)0x52, (byte)0x91, (byte)0x2d, (byte)0x76,
++        (byte)0xfe, (byte)0x63, (byte)0x64, (byte)0x4e, (byte)0x0f, (byte)0x50,
++        (byte)0x2b, (byte)0x65, (byte)0x79, (byte)0x1f, (byte)0xf1, (byte)0xbf,
++        (byte)0xc7, (byte)0x41, (byte)0x26, (byte)0xcc, (byte)0xc6, (byte)0x1c,
++        (byte)0xa9, (byte)0x83, (byte)0x6f, (byte)0x03
++    };
++
++    private static final byte EXP_Q[] = {
++        (byte)0x12, (byte)0x84, (byte)0x1a, (byte)0x99, (byte)0xce, (byte)0x9a,
++        (byte)0x8b, (byte)0x58, (byte)0xcc, (byte)0x47, (byte)0x43, (byte)0xdf,
++        (byte)0x77, (byte)0xbb, (byte)0xd3, (byte)0x20, (byte)0xae, (byte)0xe4,
++        (byte)0x2e, (byte)0x63, (byte)0x67, (byte)0xdc, (byte)0xf7, (byte)0x5f,
++        (byte)0x3f, (byte)0x83, (byte)0x27, (byte)0xb7, (byte)0x14, (byte)0x52,
++        (byte)0x56, (byte)0xbf, (byte)0xc3, (byte)0x65, (byte)0x06, (byte)0xe1,
++        (byte)0x03, (byte)0xcc, (byte)0x93, (byte)0x57, (byte)0x09, (byte)0x7b,
++        (byte)0x6f, (byte)0xe8, (byte)0x81, (byte)0x4a, (byte)0x2c, (byte)0xb7,
++        (byte)0x43, (byte)0xa9, (byte)0x20, (byte)0x1d, (byte)0xf6, (byte)0x56,
++        (byte)0x8b, (byte)0xcc, (byte)0xe5, (byte)0x4c, (byte)0xd5, (byte)0x4f,
++        (byte)0x74, (byte)0x67, (byte)0x29, (byte)0x51
++    };
++
++    private static final byte CRT_COEFF[] = {
++        (byte)0x23, (byte)0xab, (byte)0xf4, (byte)0x03, (byte)0x2f, (byte)0x29,
++        (byte)0x95, (byte)0x74, (byte)0xac, (byte)0x1a, (byte)0x33, (byte)0x96,
++        (byte)0x62, (byte)0xed, (byte)0xf7, (byte)0xf6, (byte)0xae, (byte)0x07,
++        (byte)0x2a, (byte)0x2e, (byte)0xe8, (byte)0xab, (byte)0xfb, (byte)0x1e,
++        (byte)0xb9, (byte)0xb2, (byte)0x88, (byte)0x1e, (byte)0x85, (byte)0x05,
++        (byte)0x42, (byte)0x64, (byte)0x03, (byte)0xb2, (byte)0x8b, (byte)0xc1,
++        (byte)0x81, (byte)0x75, (byte)0xd7, (byte)0xba, (byte)0xaa, (byte)0xd4,
++        (byte)0x31, (byte)0x3c, (byte)0x8a, (byte)0x96, (byte)0x23, (byte)0x9d,
++        (byte)0x3f, (byte)0x06, (byte)0x3e, (byte)0x44, (byte)0xa9, (byte)0x62,
++        (byte)0x2f, (byte)0x61, (byte)0x5a, (byte)0x51, (byte)0x82, (byte)0x2c,
++        (byte)0x04, (byte)0x85, (byte)0x73, (byte)0xd1
++    };
++
++    private static KeyPair genRSAKey(int keyLength) throws Exception {
++        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
++        kpg.initialize(keyLength);
++        return kpg.generateKeyPair();
++    }
++
++    private static KeyPair genPredefinedRSAKeyPair(String prov) throws Exception {
++        KeyFactory kf;
++        if (prov == null) {
++            kf = KeyFactory.getInstance("RSA");
++            System.out.println("Using default KeyFactory:  "+kf.getProvider().getName());
++        } else {
++            kf = KeyFactory.getInstance("RSA", prov);
++            System.out.println("Using specified KeyFactory:  "+kf.getProvider().getName());
++        }
++        BigInteger mod = new BigInteger(1, MOD);
++        BigInteger pub = new BigInteger(1, PUB_EXP);
++
++        PrivateKey privKey = kf.generatePrivate
++            (new RSAPrivateCrtKeySpec
++             (mod, pub, new BigInteger(1, PRIV_EXP),
++              new BigInteger(1, PRIME_P), new BigInteger(1, PRIME_Q),
++              new BigInteger(1, EXP_P), new BigInteger(1, EXP_Q),
++              new BigInteger(1, CRT_COEFF)));
++        PublicKey pubKey = kf.generatePublic(new RSAPublicKeySpec(mod, pub));
++        return new KeyPair(pubKey, privKey);
++    }
++
++    private static final String CIP_ALGOS[] = {
++        "RSA/ECB/NoPadding",
++        "RSA/ECB/PKCS1Padding"
++    };
++    private static final int INPUT_SIZE_REDUCTION[] = {
++        0,
++        11,
++    };
++    private static final String SIG_ALGOS[] = {
++        "MD5WithRSA",
++        "SHA1WithRSA",
++        "SHA256WithRSA",
++        "SHA384WithRSA",
++        "SHA512WithRSA"
++    };
++
++    private static KeyPair kp[] = null;
++
++    public static void main(String argv[]) throws Exception {
++        main(new TestRSA(), null);
++    }
++
++    public void doTest(Provider prov) throws Exception {
++        // first test w/ predefine KeyPair
++        System.out.println("Test against Predefined RSA Key Pair");
++        KeyPair pkp = genPredefinedRSAKeyPair("SunPKCS11-Solaris");
++        testCipher(pkp, 128, true, prov);
++        testSignature(pkp, true, prov);
++
++        pkp = genPredefinedRSAKeyPair("SunRsaSign");
++        testCipher(pkp, 128, true, prov);
++        testSignature(pkp, true, prov);
++
++        pkp = genPredefinedRSAKeyPair(null);
++        testCipher(pkp, 128, true, prov);
++        testSignature(pkp, true, prov);
++
++        System.out.println("Running key length test loop");
++        for (int i = 0; i < 10; i++) {
++            // then test w/ various key lengths
++            int keyLens[] = { 1024, 2048 };
++            kp = new KeyPair[keyLens.length];
++
++            testCipher(keyLens, false, prov);
++            testSignature(keyLens, false, prov);
++        }
++    }
++
++
++    private static void testCipher(KeyPair kp, int inputSizeInBytes,
++                                   boolean checkInterop, Provider prov)
++        throws Exception {
++        Cipher c1, c2;
++        for (int i = 0; i < CIP_ALGOS.length; i++) {
++            String algo = CIP_ALGOS[i];
++            try {
++                c1 = Cipher.getInstance(algo, prov);
++            } catch (NoSuchAlgorithmException nsae) {
++                System.out.println("Skip unsupported Cipher algo: " + algo);
++                continue;
++            }
++
++            if (checkInterop) {
++                c2 = Cipher.getInstance(algo, "SunJCE");
++            } else {
++                c2 = Cipher.getInstance(algo, prov);
++            }
++            byte[] data = Arrays.copyOf
++                 (PLAINTEXT, inputSizeInBytes - INPUT_SIZE_REDUCTION[i]);
++
++            testEncryption(c1, c2, kp, data);
++        }
++    }
++
++    private static void testCipher(int keyLens[], boolean checkInterop,
++                                   Provider prov)
++        throws Exception {
++        // RSA CipherText will always differ due to the random nonce in padding
++        // so we check whether both
++        // 1) Java Encrypt/C Decrypt
++        // 2) C Encrypt/Java Decrypt
++        // works
++        Cipher c1, c2;
++        for (int i = 0; i < CIP_ALGOS.length; i++) {
++            String algo = CIP_ALGOS[i];
++            try {
++                c1 = Cipher.getInstance(algo, prov);
++            } catch (NoSuchAlgorithmException nsae) {
++                System.out.println("Skip unsupported Cipher algo: " + algo);
++                continue;
++            }
++
++            if (checkInterop) {
++                c2 = Cipher.getInstance(algo, "SunJCE");
++            } else {
++                c2 = Cipher.getInstance(algo, prov);
++            }
++
++            for (int h = 0; h < keyLens.length; h++) {
++                // Defer key pair generation until now when it'll soon be used.
++                if (kp[h] == null) {
++                    kp[h] = genRSAKey(keyLens[h]);
++                }
++                System.out.println("\tTesting Cipher " + algo + " w/ KeySize " + keyLens[h]);
++                byte[] data = Arrays.copyOf
++                    (PLAINTEXT, keyLens[h]/8 - INPUT_SIZE_REDUCTION[i]);
++                testEncryption(c1, c2, kp[h], data);
++            }
++        }
++    }
++
++    private static void testEncryption(Cipher c1, Cipher c2, KeyPair kp, byte[] data)
++        throws Exception {
++        // C1 Encrypt + C2 Decrypt
++        byte[] out1 = null;
++        byte[] recoveredText = null;
++        try {
++            c1.init(Cipher.ENCRYPT_MODE, kp.getPublic());
++            out1 = c1.doFinal(data);
++            c2.init(Cipher.DECRYPT_MODE, kp.getPrivate());
++            recoveredText = c2.doFinal(out1);
++        } catch (Exception ex) {
++            System.out.println("\tDEC ERROR: unexpected exception");
++            ex.printStackTrace();
++            throw ex;
++        }
++        if(!Arrays.equals(recoveredText, data)) {
++            throw new RuntimeException("\tDEC ERROR: different PT bytes!");
++        }
++        // C2 Encrypt + C1 Decrypt
++        byte[] cipherText = null;
++        try {
++            c2.init(Cipher.ENCRYPT_MODE, kp.getPublic());
++            cipherText = c2.doFinal(data);
++            c1.init(Cipher.DECRYPT_MODE, kp.getPrivate());
++            try {
++                out1 = c1.doFinal(cipherText);
++            } catch (Exception ex) {
++                System.out.println("\tENC ERROR: invalid encrypted output");
++                ex.printStackTrace();
++                throw ex;
++            }
++        } catch (Exception ex) {
++            System.out.println("\tENC ERROR: unexpected exception");
++            ex.printStackTrace();
++            throw ex;
++        }
++        if (!Arrays.equals(out1, data)) {
++            throw new RuntimeException("\tENC ERROR: Decrypted result DIFF!");
++        }
++        System.out.println("\t=> PASS");
++    }
++
++    private static void testSignature(KeyPair kp, boolean checkInterop,
++                                      Provider prov) throws Exception {
++        byte[] data = PLAINTEXT;
++        Signature sig1, sig2;
++        for (int i = 0; i < SIG_ALGOS.length; i++) {
++            String algo = SIG_ALGOS[i];
++            try {
++                sig1 = Signature.getInstance(algo, prov);
++            } catch (NoSuchAlgorithmException nsae) {
++                System.out.println("Skip unsupported Signature algo: " + algo);
++                continue;
++            }
++
++            if (checkInterop) {
++                sig2 = Signature.getInstance(algo, "SunRsaSign");
++            } else {
++                sig2 = Signature.getInstance(algo, prov);
++            }
++            testSigning(sig1, sig2, kp, data);
++        }
++    }
++
++    private static void testSignature(int keyLens[], boolean checkInterop,
++                                      Provider prov) throws Exception {
++        byte[] data = PLAINTEXT;
++        Signature sig1, sig2;
++        for (int i = 0; i < SIG_ALGOS.length; i++) {
++            String algo = SIG_ALGOS[i];
++            try {
++                sig1 = Signature.getInstance(algo, prov);
++            } catch (NoSuchAlgorithmException nsae) {
++                System.out.println("Skip unsupported Signature algo: " + algo);
++                continue;
++            }
++
++            if (checkInterop) {
++                sig2 = Signature.getInstance(algo, "SunRsaSign");
++            } else {
++                sig2 = Signature.getInstance(algo, prov);
++            }
++
++            for (int h = 0; h < keyLens.length; h++) {
++                // Defer key pair generation until now when it'll soon be used.
++                if (kp[h] == null) {
++                    kp[h] = genRSAKey(keyLens[h]);
++                }
++                System.out.println("\tTesting Signature " + algo + " w/ KeySize " + keyLens[h]);
++
++                testSigning(sig1, sig2, kp[h], data);
++            }
++        }
++    }
++
++    private static void testSigning(Signature sig1, Signature sig2, KeyPair kp, byte[] data)
++            throws Exception {
++        boolean sameSig = false;
++        byte[] out = null;
++        try {
++            sig1.initSign(kp.getPrivate());
++            sig1.update(data);
++            out = sig1.sign();
++        } catch (Exception ex) {
++            System.out.println("\tSIGN ERROR: unexpected exception!");
++            ex.printStackTrace();
++        }
++
++        sig2.initSign(kp.getPrivate());
++        sig2.update(data);
++        byte[] out2 = sig2.sign();
++        if (!Arrays.equals(out2, out)) {
++            throw new RuntimeException("\tSIGN ERROR: Signature DIFF!");
++        }
++
++        boolean verify = false;
++        try {
++            System.out.println("\tVERIFY1 using native out");
++            sig1.initVerify(kp.getPublic());
++            sig1.update(data);
++            verify = sig1.verify(out);
++            if (!verify) {
++                throw new RuntimeException("VERIFY1 FAIL!");
++            }
++        } catch (Exception ex) {
++            System.out.println("\tVERIFY1 ERROR: unexpected exception!");
++            ex.printStackTrace();
++            throw ex;
++        }
++        System.out.println("\t=> PASS");
++    }
++}
+diff -ur -N a/test/jdk/com/oracle/security/ucrypto/UcryptoTest.java jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/UcryptoTest.java
+--- a/test/jdk/com/oracle/security/ucrypto/UcryptoTest.java	1970-01-01 01:00:00.000000000 +0100
++++ jdk15-jdk-15-24/test/jdk/com/oracle/security/ucrypto/UcryptoTest.java	2020-05-20 19:29:11.000000000 +0100
+@@ -0,0 +1,61 @@
++/*
++ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++import java.io.*;
++import java.util.*;
++import java.lang.reflect.*;
++import java.security.*;
++
++// common infrastructure for OracleUcrypto provider tests
++public abstract class UcryptoTest {
++
++    protected static final boolean hasUcrypto;
++    static {
++        hasUcrypto = (Security.getProvider("OracleUcrypto") != null);
++    }
++
++    private static Provider getCustomizedUcrypto(String config) throws Exception {
++        Class clazz = Class.forName("com.oracle.security.ucrypto.OracleUcrypto");
++        Constructor cons = clazz.getConstructor(new Class[] {String.class});
++        Object obj = cons.newInstance(new Object[] {config});
++        return (Provider)obj;
++    }
++
++    public abstract void doTest(Provider p) throws Exception;
++
++    public static void main(UcryptoTest test, String config) throws Exception {
++        Provider prov = null;
++        if (hasUcrypto) {
++            if (config != null) {
++                prov = getCustomizedUcrypto(config);
++            } else {
++                prov = Security.getProvider("OracleUcrypto");
++            }
++        }
++        if (prov == null) {
++            // un-available, skip testing...
++            System.out.println("No OracleUcrypto provider found, skipping test");
++            return;
++        }
++        test.doTest(prov);
++    }
++}
+--- jdk15-jdk-15-24/test/jdk/TEST.groups        Wed May 20 19:29:11 2020
++++ jdk17u-jdk-17.0.10-ga/test/jdk/TEST.groups  Tue Jan  9 21:18:15 2024
+@@ -206,6 +206,7 @@
+ jdk_security2 = \
+     javax/crypto \
+     javax/xml/crypto \
++    com/oracle/security/ucrypto \
+     com/sun/crypto
+ 
+ jdk_security3 = \
