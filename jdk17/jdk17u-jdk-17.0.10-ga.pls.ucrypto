@@ -1,0 +1,2 @@
+-p1 jdk17u-jdk-17.0.10-ga/restore-ucrypto.patch
+-p1 jdk17u-jdk-17.0.10-ga/restore-ucrypto-tests.patch
