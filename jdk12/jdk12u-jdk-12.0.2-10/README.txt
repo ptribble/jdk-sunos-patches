@@ -9,9 +9,17 @@ https://hg.openjdk.org/jdk/jdk/rev/0743e1d49930
 2. It isn't compatible by default with gcc10, gcc7 is fine but with gcc10
 you'll need to add -fcommon (the problem is that -fno-common is the default)
 
-All patches -p0
-
 JDK12:
+
+Note: with current compilers (ie gcc10 or later) you'll need to
+configure with
+--with-extra-cflags=-fcommon --with-extra-cxxflags=-fcommon
+
+Additional cleanups:
+
+toolchain-assembler.patch - get the right assembler with gcc
+
+tribblix-demangle*.patch - don't require the studio demangle
 
 openjdk12 fixes (besides fixing line number noise)
 
