@@ -43,3 +43,4 @@
 -p1 jdk11u-jdk-11.0.23-ga/tribblix-sparc2.patch
 -p1 jdk11u-jdk-11.0.23-ga/tribblix-sparc3.patch
 -p1 jdk11u-jdk-11.0.23-ga/tribblix-thrstat001.patch
+-p1 jdk11u-jdk-11.0.23-ga/toolchain-assembler.patch
