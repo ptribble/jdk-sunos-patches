@@ -1,5 +1,5 @@
 This is derived from the pkgsrc-joyent set for openjdk11
-https://github.com/joyent/pkgsrc-joyent/tree/master/openjdk11
+https://github.com/TritonDataCenter/pkgsrc-joyent/tree/master/openjdk11
 
 All patches -p0
 
