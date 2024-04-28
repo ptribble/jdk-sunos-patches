@@ -12,7 +12,6 @@
 -p0 jdk21u-jdk-21.0.1-ga/tribblix-demangle1.patch
 -p1 jdk21u-jdk-21.0.1-ga/illumos-port-2.patch
 -p1 jdk21u-jdk-21.0.1-ga/illumos-port-3.patch
--p1 jdk21u-jdk-21.0.1-ga/illumos-port-4.patch
 -p1 jdk21u-jdk-21.0.1-ga/illumos-port-5.patch
 -p1 jdk21u-jdk-21.0.1-ga/illumos-cpu_microcode_revision.patch
 -p1 jdk21u-jdk-21.0.1-ga/illumos-port-6.patch

@@ -13,7 +13,6 @@
 -p0 jdk20-jdk-20-28/tribblix-demangle1.patch
 -p1 jdk20-jdk-20-28/illumos-port-2.patch
 -p1 jdk20-jdk-20-28/illumos-port-3.patch
--p1 jdk20-jdk-20-28/illumos-port-4.patch
 -p1 jdk20-jdk-20-28/illumos-port-5.patch
 -p1 jdk20-jdk-20-28/illumos-cpu_microcode_revision.patch
 -p1 jdk20-jdk-20-28/illumos-port-6.patch

@@ -12,7 +12,6 @@
 -p0 jdk-jdk-22-2/tribblix-demangle1.patch
 -p1 jdk-jdk-22-2/illumos-port-2.patch
 -p1 jdk-jdk-22-2/illumos-port-3.patch
--p1 jdk-jdk-22-2/illumos-port-4.patch
 -p1 jdk-jdk-22-2/illumos-port-5.patch
 -p1 jdk-jdk-22-2/illumos-cpu_microcode_revision.patch
 -p1 jdk-jdk-22-2/illumos-port-6.patch
