@@ -1,7 +1,5 @@
 -p1 jdk8u-jdk8u412-ga/KPIC.patch
 -p1 jdk8u-jdk8u412-ga/ldflags-pie.patch
--p1 jdk8u-jdk8u412-ga/patch-as.patch
--p1 jdk8u-jdk8u412-ga/patch-at.patch
 -p1 jdk8u-jdk8u412-ga/patch-common_autoconf_generated-configure.sh.patch
 -p1 jdk8u-jdk8u412-ga/patch-common_autoconf_spec.gmk.in.patch
 -p1 jdk8u-jdk8u412-ga/patch-hotspot_make_solaris_makefiles_adlc.make.patch
