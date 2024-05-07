@@ -12092,7 +12092,7 @@ diff -ur --new-file a/src/hotspot/cpu/sparc/disassembler_sparc.hpp b/src/hotspot
 diff -ur --new-file a/src/hotspot/cpu/sparc/frame_sparc.cpp b/src/hotspot/cpu/sparc/frame_sparc.cpp
 --- a/src/hotspot/cpu/sparc/frame_sparc.cpp	1970-01-01 01:00:00.000000000 +0000
 +++ b/src/hotspot/cpu/sparc/frame_sparc.cpp	2023-04-16 11:42:11.061547266 +0000
-@@ -0,0 +1,827 @@
+@@ -0,0 +1,832 @@
 +/*
 + * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -12578,6 +12578,11 @@ diff -ur --new-file a/src/hotspot/cpu/sparc/frame_sparc.cpp b/src/hotspot/cpu/sp
 +  map->shift_window(last_Java_sp, NULL);
 +  assert(map->include_argument_oops(), "should be set by clear");
 +  return frame(last_Java_sp, frame::unpatchable, jfa->last_Java_pc());
++}
++
++OptimizedEntryBlob::FrameData* OptimizedEntryBlob::frame_data_for_frame(const frame& frame) const {
++  ShouldNotCallThis();
++  return nullptr;
 +}
 +
 +bool frame::optimized_entry_frame_is_first() const {
