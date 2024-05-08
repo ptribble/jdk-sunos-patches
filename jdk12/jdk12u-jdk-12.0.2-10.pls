@@ -36,6 +36,7 @@
 -p1 jdk12u-jdk-12.0.2-10/tribblix-sparc2.patch
 -p1 jdk12u-jdk-12.0.2-10/tribblix-sparc3.patch
 -p1 jdk12u-jdk-12.0.2-10/jdk12-make.patch
+-p1 jdk12u-jdk-12.0.2-10/toolchain-assembler.patch
 -p0 jdk12u-jdk-12.0.2-10/tribblix-demangle1.patch
 -p0 jdk12u-jdk-12.0.2-10/tribblix-demangle2.patch
 -p0 jdk12u-jdk-12.0.2-10/tribblix-demangle3.patch
