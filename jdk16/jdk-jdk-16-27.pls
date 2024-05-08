@@ -7,7 +7,7 @@
 -p0 jdk-jdk-16-27/patch-make_hotspot_gensrc_GensrcAdlc.gmk
 -p0 jdk-jdk-16-27/patch-make_hotspot_gensrc_GensrcDtrace.gmk
 -p0 jdk-jdk-16-27/patch-make_hotspot_lib_JvmOverrideFiles.gmk
--p0 jdk-jdk-16-27/patch-make_launcher_LauncherCommon.gmk 
+-p0 jdk-jdk-16-27/patch-make_launcher_LauncherCommon.gmk
 -p0 jdk-jdk-16-27/patch-make_lib_Awt2dLibraries.gmk
 -p0 jdk-jdk-16-27/patch-make_lib_Lib-jdk.crypto.ucrypto.gmk
 -p0 jdk-jdk-16-27/patch-make_lib_LibCommon.gmk

@@ -12,7 +12,7 @@
 -p0 jdk12u-jdk-12.0.2-10/patch-make_hotspot_lib_CompileJvm.gmk
 -p0 jdk12u-jdk-12.0.2-10/patch-make_hotspot_lib_JvmOverrideFiles.gmk
 -p0 jdk12u-jdk-12.0.2-10/patch-make_launcher_Launcher-jdk.pack.gmk
--p0 jdk12u-jdk-12.0.2-10/patch-make_launcher_LauncherCommon.gmk 
+-p0 jdk12u-jdk-12.0.2-10/patch-make_launcher_LauncherCommon.gmk
 -p0 jdk12u-jdk-12.0.2-10/patch-make_lib_Awt2dLibraries.gmk
 -p0 jdk12u-jdk-12.0.2-10/patch-make_lib_Lib-jdk.crypto.ucrypto.gmk
 -p0 jdk12u-jdk-12.0.2-10/patch-make_lib_LibCommon.gmk

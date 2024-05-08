@@ -1,5 +1,5 @@
--p1+-R jdk17u-jdk-17.0.2-ga/0011-8256238-Remove-Matcher-pass_original_key_for_aes.patch 
--p1+-R jdk17u-jdk-17.0.2-ga/0048-8256205-Simplify-compiler-calling-convention-handlin.patch 
+-p1+-R jdk17u-jdk-17.0.2-ga/0011-8256238-Remove-Matcher-pass_original_key_for_aes.patch
+-p1+-R jdk17u-jdk-17.0.2-ga/0048-8256205-Simplify-compiler-calling-convention-handlin.patch
 -p1 jdk17u-jdk-17.0.2-ga/restore_cpu_sparc.patch
 -p1 jdk17u-jdk-17.0.2-ga/restore_os_cpu_solaris_sparc.patch
 -p1 jdk17u-jdk-17.0.2-ga/sparc-bitness.patch

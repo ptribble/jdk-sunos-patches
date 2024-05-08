@@ -11,7 +11,7 @@
 -p0 jdk11u-jdk-11.0.17-ga/patch-make_hotspot_lib_CompileJvm.gmk
 -p0 jdk11u-jdk-11.0.17-ga/patch-make_hotspot_lib_JvmOverrideFiles.gmk
 -p0 jdk11u-jdk-11.0.17-ga/patch-make_launcher_Launcher-jdk.pack.gmk
--p0 jdk11u-jdk-11.0.17-ga/patch-make_launcher_LauncherCommon.gmk 
+-p0 jdk11u-jdk-11.0.17-ga/patch-make_launcher_LauncherCommon.gmk
 -p0 jdk11u-jdk-11.0.17-ga/patch-make_lib_Awt2dLibraries.gmk
 -p0 jdk11u-jdk-11.0.17-ga/patch-make_lib_Lib-jdk.crypto.ec.gmk
 -p0 jdk11u-jdk-11.0.17-ga/patch-make_lib_Lib-jdk.crypto.ucrypto.gmk

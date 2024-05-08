@@ -2,7 +2,7 @@
 -p0 jdk18u-jdk-18.0.2.1-ga/patch-make_GenerateLinkOptData.gmk
 -p0 jdk18u-jdk-18.0.2.1-ga/patch-make_autoconf_flags-cflags.m4
 -p0 jdk18u-jdk-18.0.2.1-ga/patch-make_autoconf_jdk-options.m4
--p0 jdk18u-jdk-18.0.2.1-ga/patch-make_launcher_LauncherCommon.gmk 
+-p0 jdk18u-jdk-18.0.2.1-ga/patch-make_launcher_LauncherCommon.gmk
 -p0 jdk18u-jdk-18.0.2.1-ga/patch-make_lib_LibCommon.gmk
 -p0 jdk18u-jdk-18.0.2.1-ga/patch-src_hotspot_os__cpu_solaris__x86_atomic__solaris__x86.hpp
 -p0 jdk18u-jdk-18.0.2.1-ga/patch-src_hotspot_os__cpu_solaris__x86_bytes__solaris__x86.inline.hpp
@@ -36,4 +36,4 @@
 -p1 jdk18u-jdk-18.0.2.1-ga/illumos-port-15.patch
 -p1 jdk18u-jdk-18.0.2.1-ga/illumos-zero-1.patch
 -p1 jdk18u-jdk-18.0.2.1-ga/illumos-zero-2.patch
--p1 jdk18u-jdk-18.0.2.1-ga/sparc-bitness.patch 
+-p1 jdk18u-jdk-18.0.2.1-ga/sparc-bitness.patch

@@ -10,7 +10,7 @@
 -p0 jdk15u-jdk-15.0.5-ga/patch-make_hotspot_gensrc_GensrcDtrace.gmk
 -p0 jdk15u-jdk-15.0.5-ga/patch-make_hotspot_lib_CompileJvm.gmk
 -p0 jdk15u-jdk-15.0.5-ga/patch-make_hotspot_lib_JvmOverrideFiles.gmk
--p0 jdk15u-jdk-15.0.5-ga/patch-make_launcher_LauncherCommon.gmk 
+-p0 jdk15u-jdk-15.0.5-ga/patch-make_launcher_LauncherCommon.gmk
 -p0 jdk15u-jdk-15.0.5-ga/patch-make_lib_Awt2dLibraries.gmk
 -p0 jdk15u-jdk-15.0.5-ga/patch-make_lib_Lib-jdk.crypto.ucrypto.gmk
 -p0 jdk15u-jdk-15.0.5-ga/patch-make_lib_LibCommon.gmk
@@ -38,4 +38,4 @@
 -p1 jdk15u-jdk-15.0.5-ga/illumos-port-3.patch
 -p1 jdk15u-jdk-15.0.5-ga/illumos-port-4.patch
 -p1 jdk15u-jdk-15.0.5-ga/illumos-port-5.patch
--p1 jdk15u-jdk-15.0.5-ga/illumos-cpu_microcode_revision.patch 
+-p1 jdk15u-jdk-15.0.5-ga/illumos-cpu_microcode_revision.patch

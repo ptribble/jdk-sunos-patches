@@ -10,7 +10,7 @@
 -p0 jdk14u-jdk-14.0.1-7/patch-make_hotspot_gensrc_GensrcDtrace.gmk
 -p0 jdk14u-jdk-14.0.1-7/patch-make_hotspot_lib_CompileJvm.gmk
 -p0 jdk14u-jdk-14.0.1-7/patch-make_hotspot_lib_JvmOverrideFiles.gmk
--p0 jdk14u-jdk-14.0.1-7/patch-make_launcher_LauncherCommon.gmk 
+-p0 jdk14u-jdk-14.0.1-7/patch-make_launcher_LauncherCommon.gmk
 -p0 jdk14u-jdk-14.0.1-7/patch-make_lib_Awt2dLibraries.gmk
 -p0 jdk14u-jdk-14.0.1-7/patch-make_lib_Lib-jdk.crypto.ucrypto.gmk
 -p0 jdk14u-jdk-14.0.1-7/patch-make_lib_LibCommon.gmk
