@@ -1,6 +1,6 @@
 --- src/hotspot/os/solaris/os_solaris.cpp
 +++ src/hotspot/os/solaris/os_solaris.cpp
-@@ -1663,7 +1663,7 @@
+@@ -1241,7 +1241,7 @@
  
    static const arch_t arch_array[]={
      {EM_386,         EM_386,     ELFCLASS32, ELFDATA2LSB, (char*)"IA 32"},
