@@ -40,3 +40,4 @@
 -p1 jdk21u-jdk-21.0.3-ga/sparc-bitness.patch
 -p1 jdk21u-jdk-21.0.3-ga/illumos-jline.patch
 -p1 jdk21u-jdk-21.0.3-ga/illumos-port-27.patch
+-p1 jdk21u-jdk-21.0.3-ga/testsuite.patch
