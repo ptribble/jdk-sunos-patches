@@ -1,0 +1,2 @@
+-p0 jdk18u-jdk-18.0.2.1-ga/Solaris11-EM_486.patch
+-p1 jdk18u-jdk-18.0.2.1-ga/Solaris11-TRAPNO.patch
