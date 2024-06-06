@@ -3,6 +3,12 @@ considerably modified. Cut from the jdk15 patches as of jdk15+32.
 
 See also README-zero.txt for note on a project zero variant.
 
+Note that on Solaris 11, you'll need to use
+STRIP=/usr/gnu/bin/gstrip
+in the configure command, as gnu strip isn't installed under the
+expected name.
+
+
 JDK 21 now we're in rampdown.
 
 Cleanup: Provide a working DefaultPoller implementation rather than
