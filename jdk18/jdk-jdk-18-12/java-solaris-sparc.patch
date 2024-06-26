@@ -5464,7 +5464,7 @@
          lib = expand(lib);
          int i = lib.indexOf("/$ISA/");
          if (i != -1) {
--            // replace "/$ISA/" with "/amd64/" on Solaris AMD64.
+-            // replace "/$ISA/" with "/amd64/" on 64-bit Solaris.
 -            // On all other platforms, just turn it into a "/"
 +            // replace "/$ISA/" with "/"
              String prefix = lib.substring(0, i);
