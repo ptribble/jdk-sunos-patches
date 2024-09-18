@@ -1,0 +1,14 @@
+-p1+-R jdk18-jdk-18-35/0011-8256238-Remove-Matcher-pass_original_key_for_aes.patch
+-p1+-R jdk18-jdk-18-35/0048-8256205-Simplify-compiler-calling-convention-handlin.patch
+-p1 jdk18-jdk-18-35/restore_cpu_sparc.patch
+-p1 jdk18-jdk-18-35/restore_os_cpu_solaris_sparc.patch
+-p1 jdk18-jdk-18-35/TemplateInterpreterGenerator-sparc.patch
+-p1 jdk18-jdk-18-35/c1-sparc.patch
+-p1 jdk18-jdk-18-35/jfr-sparc.patch
+-p1 jdk18-jdk-18-35/memset-sparc.patch
+-p1 jdk18-jdk-18-35/stack_bias.25.patch
+-p1 jdk18-jdk-18-35/sparc-misc.patch
+-p1 jdk18-jdk-18-35/assembler-hpp.patch
+-p1 jdk18-jdk-18-35/8254231-for-sparc.patch
+-p1+-R jdk18-jdk-18-35/0001-8264868-Reduce-inclusion-of-registerMap.hpp-and-regi.patch
+-p1 jdk18-jdk-18-35/sparc-linker.patch
