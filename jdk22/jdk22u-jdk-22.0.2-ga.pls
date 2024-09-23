@@ -41,3 +41,4 @@
 -p1 jdk22u-jdk-22.0.2-ga/illumos-jline.patch
 -p1 jdk22u-jdk-22.0.2-ga/illumos-port-27.patch
 -p1 jdk22u-jdk-22.0.2-ga/jvmci-os.patch
+-p1 jdk22u-jdk-22.0.2-ga/testsuite.patch
