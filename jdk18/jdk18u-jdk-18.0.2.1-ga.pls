@@ -37,3 +37,4 @@
 -p1 jdk18u-jdk-18.0.2.1-ga/illumos-zero-1.patch
 -p1 jdk18u-jdk-18.0.2.1-ga/illumos-zero-2.patch
 -p1 jdk18u-jdk-18.0.2.1-ga/sparc-bitness.patch
+-p1 jdk18u-jdk-18.0.2.1-ga/testsuite.patch
