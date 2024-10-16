@@ -88,6 +88,11 @@ copy_patches() {
 		chmod a+x "${NEWREPO}/${mver}/${jver}/build.sh"
 	    fi
 	fi
+	if [ -f "${file}.sparc" ] ; then
+	    if [ ! -f "${NEWREPO}/${mver}/${file}.sparc" ] ; then
+		sed "s:open${mver}/:${jver}/:" "${file}.sparc" > "${NEWREPO}/${mver}/${file}.sparc"
+	    fi
+	fi
     done
     cd "${BUILDREPO}" || bail "cd failed"
 }
