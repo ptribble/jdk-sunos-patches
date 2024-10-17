@@ -2,11 +2,7 @@
 #
 # SPDX-License-Identifier: CDDL-1.0
 #
-# rolls the sparc patches forward from one tag to the next
-#
-# also, for free, rolls the solaris patch forward
-#
-# use copy-solaris-patches.sh if you only want to do the solaris patches
+# rolls the solaris patches forward from one tag to the next
 #
 # expects 2 args - old and new tags
 #
@@ -32,10 +28,10 @@ fi
 if [ ! -d "${NVER}" ]; then
     bail "cannot find new version"
 fi
-if [ ! -f "${OVER}.pls.sparc" ]; then
+if [ ! -f "${OVER}.pls.solaris" ]; then
     bail "old pls missing"
 fi
-if [ -f "${NVER}.pls.sparc" ]; then
+if [ -f "${NVER}.pls.solaris" ]; then
     bail "new pls already exists"
 fi
 
@@ -57,18 +53,8 @@ case "${NVER}" in
 esac
 
 #
-# copy the patches listed in the old sparc pls file to the new
+# copy the patches listed in the old solaris pls file to the new
 # directory, and create a new pls file referencing those copies
 #
-cp $(awk '{print $2}' "${OVER}.pls.sparc") "$NVER"
-sed "s:${OVER}:${NVER}:" "${OVER}.pls.sparc" > "${NVER}.pls.sparc"
-
-#
-# also roll the solaris patch forward so it's not forgotten
-#
-if [ -f "${OVER}.pls.solaris" ]; then
-    if [ ! -f "${NVER}.pls.solaris" ]; then
-	cp $(awk '{print $2}' "${OVER}.pls.solaris") "$NVER"
-        sed "s:${OVER}:${NVER}:" "${OVER}.pls.solaris" > "${NVER}.pls.solaris"
-    fi
-fi
+cp $(awk '{print $2}' "${OVER}.pls.solaris") "$NVER"
+sed "s:${OVER}:${NVER}:" "${OVER}.pls.solaris" > "${NVER}.pls.solaris"
