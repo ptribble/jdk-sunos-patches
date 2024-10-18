@@ -1154,7 +1154,7 @@
  #define JVM_MAXPATHLEN MAXPATHLEN
  #else
  // Hack: MAXPATHLEN is 4095 on some Linux and 4096 on others. This may
-@@ -87,14 +87,8 @@
+@@ -87,9 +87,6 @@
  #define JVM_SIGTERM    SIGTERM
  
  #define BREAK_SIGNAL     SIGQUIT           /* Thread dumping support.    */
@@ -1164,11 +1164,6 @@
  #define SHUTDOWN1_SIGNAL SIGHUP            /* Shutdown Hooks support.    */
  #define SHUTDOWN2_SIGNAL SIGINT
  #define SHUTDOWN3_SIGNAL SIGTERM
- 
--/* With 1.4.1 libjsig added versioning: used in os_solaris.cpp and jsig.c */
--#define JSIG_VERSION_1_4_1   0x30140100
--
- #endif /* !_JAVASOFT_JVM_MD_H_ */
 --- old/src/hotspot/os/posix/os_posix.cpp	2020-05-20 17:59:42.965746713 -0700
 +++ new/src/hotspot/os/posix/os_posix.cpp	2020-05-20 17:59:42.629740261 -0700
 @@ -499,7 +499,7 @@
@@ -1473,7 +1468,7 @@
  
 --- old/src/hotspot/share/utilities/globalDefinitions_gcc.hpp	2020-05-20 18:00:44.978937412 -0700
 +++ new/src/hotspot/share/utilities/globalDefinitions_gcc.hpp	2020-05-20 18:00:44.586929885 -0700
-@@ -39,36 +39,15 @@
+@@ -39,32 +39,15 @@
  #include <stdlib.h>
  #include <wchar.h>
  
@@ -1502,10 +1497,6 @@
 -#include <setjmp.h>
 -#include <inttypes.h>
 -#endif // SOLARIS
--
--# ifdef SOLARIS_MUTATOR_LIBTHREAD
--# include <sys/procfs.h>
--# endif
 -
  #if defined(LINUX) || defined(_ALLBSD_SOURCE)
  #include <inttypes.h>
@@ -1702,21 +1693,13 @@
     identifiers matching a C constant. The PREFIX_ is filtered out in the
 --- old/src/java.base/share/conf/security/java.security	2020-05-20 18:00:54.519120590 -0700
 +++ new/src/java.base/share/conf/security/java.security	2020-05-20 18:00:54.183114138 -0700
-@@ -60,9 +60,6 @@
- #
- # List of providers and their preference orders (see above):
- #
--#ifdef solaris
--security.provider.tbd=SunPKCS11 ${java.home}/conf/security/sunpkcs11-solaris.cfg
--#endif
- security.provider.tbd=SUN
- security.provider.tbd=SunRsaSign
- security.provider.tbd=SunEC
-@@ -83,9 +77,7 @@
+@@ -77,11 +77,7 @@
  #ifdef macosx
  security.provider.tbd=Apple
  #endif
--#ifndef solaris
+-#ifdef solaris
+-security.provider.tbd=SunPKCS11 ${java.home}/conf/security/sunpkcs11-solaris.cfg
+-#else
  security.provider.tbd=SunPKCS11
 -#endif
  
@@ -4971,7 +4954,7 @@
 -#endif
 -
 -/* Function types to support dynamic linking of socket API extension functions
-- * for SCTP. This is so that there is no linkage depandancy during build or
+- * for SCTP. This is so that there is no linkage dependency during build or
 - * runtime for libsctp.*/
 -typedef int sctp_getladdrs_func(int sock, sctp_assoc_t id, void **addrs);
 -typedef int sctp_freeladdrs_func(void* addrs);
@@ -6336,7 +6319,7 @@
 -
 -// The attach mechanism on Solaris is implemented using the Doors IPC
 -// mechanism. The first tool to attempt to attach causes the attach
--// listener thread to startup. This thread creats a door that is
+-// listener thread to startup. This thread creates a door that is
 -// associated with a function that enqueues an operation to the attach
 -// listener. The door is attached to a file in the file system so that
 -// client (tools) can locate it. To enqueue an operation to the VM the
@@ -6623,7 +6606,7 @@
 -
 -    // create a pair of connected sockets. Store the file descriptor
 -    // for one end in the operation and enqueue the operation. The
--    // file descriptor for the other end wil be returned to the client.
+-    // file descriptor for the other end will be returned to the client.
 -    if (res == 0) {
 -      int s[2];
 -      if (socketpair(PF_UNIX, SOCK_STREAM, 0, s) < 0) {
@@ -6724,7 +6707,7 @@
 -  if (dd >= 0) {
 -    set_door_descriptor(dd);
 -    set_door_path(door_path);
--    log_trace(attach)("door file %s created succesfully", door_path);
+-    log_trace(attach)("door file %s created successfully", door_path);
 -  } else {
 -    // unable to create door, attach it to file, or rename file into place
 -    ::unlink(initial_path);
@@ -10911,7 +10894,7 @@
 -//
 -// Assumptions:
 -// +    We assume that all threads in the process belong to the same
--//              scheduling class.   IE. an homogenous process.
+-//              scheduling class.   IE. a homogeneous process.
 -// +    Must be root or in IA group to change change "interactive" attribute.
 -//              Priocntl() will fail silently.  The only indication of failure is when
 -//              we read-back the value and notice that it hasn't changed.
@@ -11272,8 +11255,8 @@
 -//
 -// ThreadPriorityPolicy=1
 -// This mode causes the priority table to get filled with
--// linear values.  NormPriority get's mapped to 50% of the
--// Maximum priority an so on.  This will cause VM threads
+-// linear values.  NormPriority gets mapped to 50% of the
+-// Maximum priority and so on.  This will cause VM threads
 -// to get unfair treatment against other Solaris processes
 -// which do not explicitly alter their thread priorities.
 -
@@ -11647,7 +11630,7 @@
 -  }
 -
 -  // Calculate theoretical max. size of Threads to guard gainst
--  // artifical out-of-memory situations, where all available address-
+-  // artificial out-of-memory situations, where all available address-
 -  // space has been reserved by thread stacks. Default stack size is 1Mb.
 -  size_t pre_thread_stack_size = (JavaThread::stack_size_at_create()) ?
 -    JavaThread::stack_size_at_create() : (1*K*K);
@@ -16145,7 +16128,7 @@
 -class EventPortSelectorImpl
 -    extends SelectorImpl
 -{
--    // maximum number of events to retrive in one call to port_getn
+-    // maximum number of events to retrieve in one call to port_getn
 -    static final int MAX_EVENTS = Math.min(IOUtil.fdLimit()-1, 1024);
 -
 -    // port file descriptor
@@ -20380,7 +20363,7 @@
 -  J->bcp = bcp;
 -
 -  /* On x86 with C2 JVM: native frame may have wrong regs[R_FP]
--   * For example: JVM_SuspendThread frame poins to the top interpreted frame.
+-   * For example: JVM_SuspendThread frame points to the top interpreted frame.
 -   * If we call is_method(J, methodPtr) before codecache_contains(J, pc)
 -   * then we go over and omit both: nmethod and I2CAdapter frames.
 -   * Note, that regs[R_PC] is always correct if frame defined correctly.
@@ -20642,7 +20625,7 @@
 -// generic error messages
 -#define JVM_ERR_OUT_OF_MEMORY            "out of memory (native heap)"
 -#define JVM_ERR_INVALID_PARAM            "invalid input parameter(s)"
--#define JVM_ERR_NULL_PARAM               "input paramater is NULL"
+-#define JVM_ERR_NULL_PARAM               "input parameter is NULL"
 -
 -// error messages for attach
 -#define JVM_ERR_CANT_OPEN_DOOR           "cannot open door file"
