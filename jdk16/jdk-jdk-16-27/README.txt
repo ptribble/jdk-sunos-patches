@@ -20,6 +20,9 @@ That's to do with freetype, I think.
 
 Changes:
 
+Implement print_memory_mappings, as a no-op (like AIX is); the build
+needed it in 16+28, but it's needed earlier for the test suite.
+
 In 16+27
 
 Tidied up[ the main patch. Some of the unnecessary Studio stuff failed
