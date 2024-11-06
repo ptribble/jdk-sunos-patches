@@ -14,3 +14,4 @@
 -p1 jdk17u-jdk-17.0.10-ga/sparc-linker.patch
 -p1+-R jdk17u-jdk-17.0.10-ga/0001-8282477-x86-aarch64-vmassert-_last_Java_pc-NULL-alre.patch
 -p1 jdk17u-jdk-17.0.10-ga/sparc-safefetch.patch
+-p1 jdk17u-jdk-17.0.10-ga/fix-allocate_new_tlab-crash.patch
