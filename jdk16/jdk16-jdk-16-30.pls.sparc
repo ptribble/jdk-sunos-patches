@@ -11,3 +11,4 @@
 -p1 jdk16-jdk-16-30/sparc-misc.patch
 -p1 jdk16-jdk-16-30/assembler-hpp.patch
 -p1 jdk16-jdk-16-30/8254231-for-sparc.patch
+-p1 jdk16-jdk-16-30/fix-allocate_new_tlab-crash.patch

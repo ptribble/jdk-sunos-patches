@@ -8,3 +8,4 @@
 -p1 jdk-jdk-16-23/stack_bias.25.patch
 -p1 jdk-jdk-16-23/sparc-misc.patch
 -p1 jdk-jdk-16-23/assembler-hpp.patch
+-p1 jdk-jdk-16-23/fix-allocate_new_tlab-crash.patch
