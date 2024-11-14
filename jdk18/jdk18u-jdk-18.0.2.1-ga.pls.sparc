@@ -12,3 +12,4 @@
 -p1 jdk18u-jdk-18.0.2.1-ga/8254231-for-sparc.patch
 -p1+-R jdk18u-jdk-18.0.2.1-ga/0001-8264868-Reduce-inclusion-of-registerMap.hpp-and-regi.patch
 -p1 jdk18u-jdk-18.0.2.1-ga/sparc-linker.patch
+-p1 jdk18u-jdk-18.0.2.1-ga/fix-allocate_new_tlab-crash.patch
