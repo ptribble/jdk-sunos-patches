@@ -10365,7 +10365,7 @@
 -         SIZE_FORMAT " is not aligned to " SIZE_FORMAT,
 -         alignment, (size_t) vm_page_size());
 -
--  int page_sizes_max = 9;
+-  const int page_sizes_max = 9;
 -  size_t _illumos_page_sizes[page_sizes_max];
 -  int n = getpagesizes(_illumos_page_sizes, page_sizes_max);
 -  for (int i = 0; _illumos_page_sizes[i] != 0; i++) {
@@ -10747,7 +10747,7 @@
 -  }
 -
 -  // Find the page sizes supported by the system
--  int page_sizes_max = 9;
+-  const int page_sizes_max = 9;
 -  size_t _illumos_page_sizes[page_sizes_max];
 -  int n = getpagesizes(_illumos_page_sizes, page_sizes_max);
 -  assert(n > 0, "illumos bug?");
@@ -26749,7 +26749,7 @@
 - /* G_NOCORE */       "No such core file",
 - /* G_NOPROCORCORE */ "No such process or core",
 - /* G_NOEXEC */       "Cannot locate executable file",
-- /* G_ZOMB   */       "Zombie processs",
+- /* G_ZOMB   */       "Zombie process",
 - /* G_PERM   */       "No permission to attach",
 - /* G_BUSY   */       "Another process has already attached",
 - /* G_SYS    */       "System process - can not attach",
