@@ -37,3 +37,4 @@
 -p1 jdk21u-jdk-21.0.5-ga/illumos-jline.patch
 -p1 jdk21u-jdk-21.0.5-ga/illumos-port-27.patch
 -p1 jdk21u-jdk-21.0.5-ga/testsuite.patch
+-p1 jdk21u-jdk-21.0.5-ga/fastdebug.patch

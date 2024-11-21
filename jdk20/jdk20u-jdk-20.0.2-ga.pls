@@ -38,3 +38,4 @@
 -p1 jdk20u-jdk-20.0.2-ga/illumos-zero-1.patch
 -p1 jdk20u-jdk-20.0.2-ga/illumos-zero-2.patch
 -p1 jdk20u-jdk-20.0.2-ga/sparc-bitness.patch
+-p1 jdk20u-jdk-20.0.2-ga/fastdebug.patch
