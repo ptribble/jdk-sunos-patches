@@ -8,4 +8,6 @@ aren't safe to apply on other systems.
 
 Changes in this release:
 
-Line number noise only.
+Changed the assert in c1_LIR_sparc.cpp to also allow
+base()->type() == T_ADDRESS
+matching other cpus (#8244997).
