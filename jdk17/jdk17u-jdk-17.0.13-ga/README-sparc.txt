@@ -4,3 +4,6 @@ front of the initialization list for PICL(), as we get a warning
 
 Cleanup: in frame_sparc.cpp, moved _deopt_state up 1 in the
 initialization list for frame::frame to avoid the Wreoder warning.
+
+In sparc.ad, dump_register() signature has changed, to grow a third
+argument.
