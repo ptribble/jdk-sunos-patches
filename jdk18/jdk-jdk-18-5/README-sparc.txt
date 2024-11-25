@@ -10,3 +10,6 @@ value.
 
 Signature mismatch for move_op() - remove the final false from our
 caller (was presumably the unaligned argument).
+
+LIRTracePeephole was removed (only set in debug builds, and was always
+false by default).
