@@ -41,3 +41,4 @@
 -p1 jdk16u-jdk-16.0.2-7/illumos-zero-1.patch
 -p1 jdk16u-jdk-16.0.2-7/illumos-zero-2.patch
 -p1 jdk16u-jdk-16.0.2-7/sparc-bitness.patch
+-p1 jdk16u-jdk-16.0.2-7/testsuite.patch
