@@ -3,11 +3,25 @@ considerably modified. Cut from the jdk15 patches as of jdk15+32.
 
 See also README-zero.txt for note on a project zero variant.
 
-Note that on Solaris 11, you'll need to use
-STRIP=/usr/gnu/bin/gstrip
-in the configure command, as gnu strip isn't installed under the
-expected name.
+Cleanup: src/hotspot/os/solaris and src/hotspot/os_cpu/solaris_x86
+split out into separate restore patches.
 
+Cleanup: remove audio solaris 7 compatibility code
+
+Cleanup: allow fastdebug builds, see fastdebug.patch
+
+Cleanup: remove unused JSIG_VERSION_1_4_1 define
+
+Cleanup: remove unused SOLARIS_MUTATOR_LIBTHREAD hunk
+
+20.0.2 respin 1
+
+Fixed the patch for src/java.base/unix/classes/java/lang/ProcessImpl.java
+which fixes the startup hang in jshell and illuminate (and hopefully
+the minecraft reports)
+
+Cleanup: missed the dropping of TIERED in 17+8, it's now
+COMPILER1_AND_COMPILER2
 
 20.0.2
 
@@ -18,7 +32,7 @@ See illumos-port-23.patch
 20.0.1
 
 Needed to include <limits.h> in
-jdk20u-jdk-20.0.1-ga/src/java.base/share/native/libjava/jni_util.c
+src/java.base/share/native/libjava/jni_util.c
 to make sure that INT_MAX is defined. See illumos-port-22.patch
 
 20+29, 20+30, 20+31, 20+32, 20+33
@@ -46,7 +60,7 @@ os::supports_sse() has been removed
 
 20+23
 
-ExtendedDTraceProbes has been removed. Which removes 
+ExtendedDTraceProbes has been removed. Which removes
 DTrace::set_extended_dprobes() as well.
 
 20+22
@@ -82,7 +96,7 @@ FileDispatcherImpl has been split out into a shared
 UnixFileDispatcherImpl plus platform-specific FileDispatcherImpl, so
 we need our own implementation, and that includes parts of what would
 have been FileChannelImpl.c, the new files are
-src/java.base/solaris/classes/sun/nio/ch/FileDispatcherImpl.java and 
+src/java.base/solaris/classes/sun/nio/ch/FileDispatcherImpl.java and
 src/java.base/solaris/native/libnio/ch/FileDispatcherImpl.c, and all
 we need to do is implement our copy of transferTo0 from the old
 FileChannelImpl.c, see illumos-port-21.patch
