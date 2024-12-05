@@ -3,7 +3,23 @@ considerably modified. Cut from the jdk15 patches as of jdk15+32.
 
 See also README-zero.txt for patches to build a project zero variant.
 
-Most patches -p0
+Cleanup: src/hotspot/os/solaris and src/hotspot/os_cpu/solaris_x86
+split out into separate restore patches.
+
+Cleanup: remove audio solaris 7 compatibility code
+
+Cleanup: remove unused JSIG_VERSION_1_4_1 define
+
+Cleanup: remove unused SOLARIS_MUTATOR_LIBTHREAD hunk
+
+19.0.2 respin 1
+
+Fixed the patch for src/java.base/unix/classes/java/lang/ProcessImpl.java
+which fixes the startup hang in jshell and illuminate (and hopefully
+the minecraft reports)
+
+Cleanup: missed the dropping of TIERED in 17+8, it's now
+COMPILER1_AND_COMPILER2
 
 19.0.2
 
@@ -90,7 +106,7 @@ Minor patch noise.
 
 This includes Project Loom aka virtual threads.
 
-New DefaultPollerProvider; create a DevPollPoller stub that throws 
+New DefaultPollerProvider; create a DevPollPoller stub that throws
 UnsupportedOperationException similar to the way that the AIX
 implementation does. This is enough to make the code compile, and
 things like jkstat work, but jshell doesn't present a prompt (it was
