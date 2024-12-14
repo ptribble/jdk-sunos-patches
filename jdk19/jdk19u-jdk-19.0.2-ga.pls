@@ -1,6 +1,6 @@
 -p1+-R jdk19u-jdk-19.0.2-ga/java-solaris-sparc.patch
--p1 jdk19u-jdk-19.0.2-ga/restore_os_cpu_solaris_x86.patch 
--p1 jdk19u-jdk-19.0.2-ga/restore_os_solaris.patch 
+-p1 jdk19u-jdk-19.0.2-ga/restore_os_cpu_solaris_x86.patch
+-p1 jdk19u-jdk-19.0.2-ga/restore_os_solaris.patch
 -p0 jdk19u-jdk-19.0.2-ga/patch-make_GenerateLinkOptData.gmk
 -p0 jdk19u-jdk-19.0.2-ga/patch-make_autoconf_flags-cflags.m4
 -p0 jdk19u-jdk-19.0.2-ga/patch-make_autoconf_jdk-options.m4
