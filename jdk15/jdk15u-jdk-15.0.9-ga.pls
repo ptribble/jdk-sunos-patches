@@ -39,3 +39,4 @@
 -p1 jdk15u-jdk-15.0.9-ga/illumos-port-4.patch
 -p1 jdk15u-jdk-15.0.9-ga/illumos-port-5.patch
 -p1 jdk15u-jdk-15.0.9-ga/illumos-cpu_microcode_revision.patch
+-p1 jdk15u-jdk-15.0.9-ga/testsuite.patch
