@@ -260,7 +260,7 @@ diff --git a/src/hotspot/share/runtime/java.cpp b/src/hotspot/share/runtime/java
 index 820bb5c3505..996bb7dbca1 100644
 --- a/src/hotspot/share/runtime/java.cpp
 +++ b/src/hotspot/share/runtime/java.cpp
-@@ -614,7 +614,7 @@ void vm_perform_shutdown_actions() {
+@@ -617,7 +617,7 @@ void vm_perform_shutdown_actions() {
        JavaThread* jt = thread->as_Java_thread();
        // Must always be walkable or have no last_Java_frame when in
        // thread_in_native
