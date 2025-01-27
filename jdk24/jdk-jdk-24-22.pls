@@ -37,3 +37,4 @@
 -p1 jdk-jdk-24-22/jvmci-os.patch
 -p1 jdk-jdk-24-22/testsuite.patch
 -p1 jdk-jdk-24-22/illumos-port-29.patch
+-p1 jdk-jdk-24-22/fastdebug.patch

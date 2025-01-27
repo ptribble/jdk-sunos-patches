@@ -37,3 +37,4 @@
 -p1 jdk-jdk-24-19/illumos-attachlistener.patch
 -p1 jdk-jdk-24-19/jvmci-os.patch
 -p1 jdk-jdk-24-19/testsuite.patch
+-p1 jdk-jdk-24-19/fastdebug.patch
