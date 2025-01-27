@@ -39,3 +39,4 @@
 -p1 jdk-jdk-23-20/illumos-jline.patch
 -p1 jdk-jdk-23-20/illumos-port-27.patch
 -p1 jdk-jdk-23-20/illumos-attachlistener.patch
+-p1 jdk-jdk-23-20/fastdebug.patch

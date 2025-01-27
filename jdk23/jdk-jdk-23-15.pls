@@ -38,3 +38,4 @@
 -p1 jdk-jdk-23-15/sparc-bitness.patch
 -p1 jdk-jdk-23-15/illumos-jline.patch
 -p1 jdk-jdk-23-15/illumos-port-27.patch
+-p1 jdk-jdk-23-15/fastdebug.patch

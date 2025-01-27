@@ -41,3 +41,4 @@
 -p1 jdk-jdk-23-14/illumos-jline.patch
 -p1 jdk-jdk-23-14/illumos-port-27.patch
 -p1 jdk-jdk-23-14/fix-TestFilesCompilation.patch
+-p1 jdk-jdk-23-14/fastdebug.patch
