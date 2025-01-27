@@ -40,3 +40,4 @@
 -p1 jdk22-jdk-22-36/sparc-bitness.patch
 -p1 jdk22-jdk-22-36/illumos-jline.patch
 -p1 jdk22-jdk-22-36/illumos-port-27.patch
+-p1 jdk22-jdk-22-36/fastdebug.patch
