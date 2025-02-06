@@ -4,6 +4,15 @@ IMPORTANT: note that the build target has changed, from 'all' to
 'product-images', as 'all' tries to build a static image which doesn't
 work.
 
+Cleanup: remove Solaris 2.6 libthread check
+
+Cleanup: remove print_libversion_info(), it's really a no-op as
+everything now uses the "new" libthread
+
+Cleanup: drop 2 unnecessary patches
+patch-src_hotspot_share_gc_g1_g1Analytics.cpp
+patch-make_autoconf_jdk-options.m4
+
 25+8
 
 Trivial patch noise.
