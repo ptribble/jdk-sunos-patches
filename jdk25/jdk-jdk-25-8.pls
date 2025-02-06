@@ -3,8 +3,6 @@
 -p1 jdk-jdk-25-8/restore_os_cpu_solaris_x86.patch
 -p0 jdk-jdk-25-8/patch-make_GenerateLinkOptData.gmk
 -p0 jdk-jdk-25-8/patch-make_autoconf_flags-cflags.m4
--p0 jdk-jdk-25-8/patch-make_autoconf_jdk-options.m4
--p0 jdk-jdk-25-8/patch-src_hotspot_share_gc_g1_g1Analytics.cpp
 -p0 jdk-jdk-25-8/tribblix-flags-cflags.patch
 -p0 jdk-jdk-25-8/tribblix-flags-ldflags.patch
 -p0 jdk-jdk-25-8/tribblix-flags-ldflags3.patch
