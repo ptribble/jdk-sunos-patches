@@ -7,7 +7,7 @@ env PATH=/usr/bin:/usr/sbin:/usr/sfw/bin:/usr/gnu/bin bash ./configure \
 --disable-warnings-as-errors \
 --with-source-date=current \
 DATE=/usr/gnu/bin/date \
-SORT=/usr/gnu/bin/sort \
+LOCALE=/bin/true \
 STRIP=/usr/gnu/bin/strip
 
 env PATH=/usr/bin:/usr/sbin:/usr/sfw/bin:/usr/gnu/bin gmake product-images
