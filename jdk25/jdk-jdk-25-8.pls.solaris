@@ -1,0 +1,4 @@
+-p0 jdk-jdk-25-8/Solaris11-EM_486.patch
+-p1 jdk-jdk-25-8/Solaris11-TRAPNO.patch
+-p1 jdk-jdk-25-8/Solaris11-adlc.patch
+-p1 jdk-jdk-25-8/Solaris11-pipewire.patch
