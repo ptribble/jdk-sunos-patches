@@ -5,6 +5,12 @@ See also README-zero.txt for note on a project zero variant.
 
 JDK 22 now switched to the jdk22 stabilisation repo
 
+Cleanup: Remove unused global UseOSErrorReporting.
+
+Cleanup: Remove long unused sysThreadAvailableStackWithSlack()
+
+Cleanup: remove audio solaris 7 compatibility code
+
 Cleanup: use pset_getloadavg() directly
 
 Cleanup: Remove SolarisX86JavaThreadPDAccess, it's for 32-bit.
