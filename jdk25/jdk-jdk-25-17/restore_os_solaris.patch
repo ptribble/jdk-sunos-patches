@@ -2380,7 +2380,7 @@ diff -urN /tmp/a/os_perf_solaris.cpp b/src/hotspot/os/solaris/os_perf_solaris.cp
 diff -urN /tmp/a/os_solaris.cpp b/src/hotspot/os/solaris/os_solaris.cpp
 --- /tmp/a/os_solaris.cpp	1970-01-01 01:00:00.000000000 +0100
 +++ b/src/hotspot/os/solaris/os_solaris.cpp	2024-09-16 14:41:33.968071187 +0100
-@@ -0,0 +1,2891 @@
+@@ -0,0 +1,2890 @@
 +/*
 + * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -4202,7 +4202,7 @@ diff -urN /tmp/a/os_solaris.cpp b/src/hotspot/os/solaris/os_solaris.cpp
 +// Large page support
 +static size_t _large_page_size = 0;
 +
-+bool os::Solaris::mpss_sanity_check(bool warn, size_t* page_size) {
++bool os::Solaris::mpss_sanity_check(size_t* page_size) {
 +  // Find the page sizes supported by the system
 +  const int page_sizes_max = 9;
 +  size_t _illumos_page_sizes[page_sizes_max];
@@ -4230,11 +4230,7 @@ diff -urN /tmp/a/os_solaris.cpp b/src/hotspot/os/solaris/os_solaris.cpp
 +
 +void os::large_page_init() {
 +  if (UseLargePages) {
-+    // print a warning if any large page related flag is specified on command line
-+    bool warn_on_failure = !FLAG_IS_DEFAULT(UseLargePages)        ||
-+                           !FLAG_IS_DEFAULT(LargePageSizeInBytes);
-+
-+    UseLargePages = Solaris::mpss_sanity_check(warn_on_failure, &_large_page_size);
++    UseLargePages = Solaris::mpss_sanity_check(&_large_page_size);
 +  }
 +}
 +
@@ -4740,6 +4736,9 @@ diff -urN /tmp/a/os_solaris.cpp b/src/hotspot/os/solaris/os_solaris.cpp
 +  return addr;
 +}
 +
++// there's more context to this handler in the gate, look at
++// thr_sighndlrinfo() in usr/src/lib/libc/port/threads/thr.c
++// and the notes in usr/src/lib/libc/port/gen/walkstack.c
 +void os::Solaris::libthread_init() {
 +  lwp_priocntl_init();
 +
@@ -5275,7 +5274,7 @@ diff -urN /tmp/a/os_solaris.cpp b/src/hotspot/os/solaris/os_solaris.cpp
 diff -urN /tmp/a/os_solaris.hpp b/src/hotspot/os/solaris/os_solaris.hpp
 --- /tmp/a/os_solaris.hpp	1970-01-01 01:00:00.000000000 +0100
 +++ b/src/hotspot/os/solaris/os_solaris.hpp	2024-09-16 14:41:33.968210379 +0100
-@@ -0,0 +1,200 @@
+@@ -0,0 +1,183 @@
 +/*
 + * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -5361,9 +5360,6 @@ diff -urN /tmp/a/os_solaris.hpp b/src/hotspot/os/solaris/os_solaris.hpp
 +  static pthread_setname_np_func_t _pthread_setname_np;
 +
 + public:
-+  // Large Page Support--ISM.
-+  static bool largepage_range(char* addr, size_t size);
-+
 +  static address handler_start, handler_end; // start and end pc of thr_sighndlrinfo
 +
 +  static bool valid_ucontext(Thread* thread, const ucontext_t* valid, const ucontext_t* suspect);
@@ -5393,7 +5389,7 @@ diff -urN /tmp/a/os_solaris.hpp b/src/hotspot/os/solaris/os_solaris.hpp
 +                                size_t alignment_hint, bool exec);
 +  static char* mmap_chunk(char *addr, size_t size, int flags, int prot);
 +  static char* anon_mmap(char* requested_addr, size_t bytes);
-+  static bool mpss_sanity_check(bool warn, size_t * page_size);
++  static bool mpss_sanity_check(size_t * page_size);
 +
 +  static address current_stack_base();
 +  static size_t current_stack_size();
@@ -5413,20 +5409,6 @@ diff -urN /tmp/a/os_solaris.hpp b/src/hotspot/os/solaris/os_solaris.hpp
 +  static void libthread_init();
 +  static void synchronization_init();
 +  static bool liblgrp_init();
-+
-+  // alignment with os_posix means we use pthreads
-+  static int mutex_lock(pthread_mutex_t *mx)    { return pthread_mutex_lock(mx); }
-+  static int mutex_trylock(pthread_mutex_t *mx) { return pthread_mutex_trylock(mx); }
-+  static int mutex_unlock(pthread_mutex_t *mx)  { return pthread_mutex_unlock(mx); }
-+  static int mutex_init(pthread_mutex_t *mx)    { return pthread_mutex_init(mx, NULL); }
-+  static int mutex_destroy(pthread_mutex_t *mx) { return pthread_mutex_destroy(mx); }
-+
-+  static int cond_timedwait(pthread_cond_t *cv, pthread_mutex_t *mx, timestruc_t *abst) { return pthread_cond_timedwait(cv, mx, abst); }
-+  static int cond_wait(pthread_cond_t *cv, pthread_mutex_t *mx) { return pthread_cond_wait(cv, mx); }
-+  static int cond_signal(pthread_cond_t *cv)            { return pthread_cond_signal(cv); }
-+  static int cond_broadcast(pthread_cond_t *cv)         { return pthread_cond_broadcast(cv); }
-+  static int cond_init(pthread_cond_t *cv)              { return pthread_cond_init(cv, NULL); }
-+  static int cond_destroy(pthread_cond_t *cv)           { return pthread_cond_destroy(cv); }
 +
 +  static bool synchronization_initialized()                { return _synchronization_initialized; }
 +
