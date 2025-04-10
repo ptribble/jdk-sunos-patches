@@ -2,6 +2,10 @@ See also README-zero.txt for note on a project zero variant.
 
 JDK 24 now that jdk23 has been branched off.
 
+Cleanup: Remove /usr/bin/sh override in PrintServiceLookupProvider.java.
+
+Cleanup: Define -D_REENTRANT for non-gcc (ie clang) builds
+
 Cleanup: remove unused register stack functions. See the bug
 8253457: Remove unimplemented register stack functions
 The change for that not only removed the itanium only register
