@@ -1,0 +1,50 @@
+The following are necessary in order to get jdk14 built with
+Studio 12.4. Otherwise the compiler will be called with invalid
+flags and simply exit.
+
+Studio 12.6 seems to fail with local symbol binding errors.
+
+The Lib-jdk.hotspot.agent.gmk hunk reverts the gcc patch.
+
+--- a/make/autoconf/flags-cflags.m4	2020-07-08 22:01:33.000000000 +0200
++++ b/make/autoconf/flags-cflags.m4	2025-04-14 12:36:31.794801290 +0200
+@@ -175,7 +175,7 @@
+       DISABLE_WARNING_PREFIX="-erroff="
+       CFLAGS_WARNINGS_ARE_ERRORS="-errwarn=%all"
+ 
+-      WARNINGS_ENABLE_ALL_CFLAGS="-v -fd -xtransition"
++      WARNINGS_ENABLE_ALL_CFLAGS="-v -fd"
+       WARNINGS_ENABLE_ALL_CXXFLAGS="+w +w2"
+ 
+       DISABLED_WARNINGS_C="E_OLD_STYLE_FUNC_DECL E_OLD_STYLE_FUNC_DEF E_SEMANTICS_OF_OP_CHG_IN_ANSI_C E_NO_REPLACEMENT_IN_STRING E_DECLARATION_IN_CODE"
+@@ -613,7 +613,7 @@
+     # We can't turn on -std=c99 without breaking compilation of the splashscreen/png
+     # utilities. But we can enable c99 as below (previously achieved by using -Xa).
+     # It is the no_lib that makes the difference.
+-    LANGSTD_CFLAGS="-xc99=all,no_lib"
++    LANGSTD_CFLAGS="-std=c99"
+   elif test "x$TOOLCHAIN_TYPE" = xmicrosoft; then
+     # MSVC doesn't support C99/C11 explicitly, unless you compile as C++:
+     # LANGSTD_CFLAGS="-TP"
+--- a/make/lib/Awt2dLibraries.gmk	2020-07-08 22:01:33.000000000 +0200
++++ b/make/lib/Awt2dLibraries.gmk	2025-04-14 12:41:06.475874120 +0200
+@@ -630,7 +630,7 @@
+         E_ENUM_VAL_OVERFLOWS_INT_MAX, \
+     DISABLED_WARNINGS_CXX_solstudio := \
+         truncwarn wvarhidenmem wvarhidemem wbadlkginit identexpected \
+-        hidevf w_novirtualdescr arrowrtn2 refmemnoconstr_aggr unknownpragma \
++        hidevf w_novirtualdescr arrowrtn2 refmemnoconstr unknownpragma \
+         doubunder wunreachable, \
+     DISABLED_WARNINGS_microsoft := 4267 4244 4018 4090 4996 4146 4334 4819 4101 4068 4805 4138, \
+     LDFLAGS := $(subst -Xlinker -z -Xlinker defs,, \
+--- a/make/lib/Lib-jdk.hotspot.agent.gmk	Mon Apr 13 16:53:05 2020
++++ b/make/lib/Lib-jdk.hotspot.agent.gmk	Wed Apr 15 13:54:06 2020
+@@ -70,7 +70,7 @@
+     EXTRA_SRC := $(LIBSA_EXTRA_SRC), \
+     LDFLAGS := $(LDFLAGS_JDKLIB) $(SA_LDFLAGS), \
+     LIBS_linux := $(LIBDL), \
+-    LIBS_solaris := -ldl -lstdc++ -lthread -lproc, \
++    LIBS_solaris := -ldl -ldemangle -lthread -lproc, \
+     LIBS_macosx := -framework Foundation -framework JavaNativeFoundation \
+         -framework JavaRuntimeSupport -framework Security -framework CoreFoundation, \
+     LIBS_windows := dbgeng.lib, \

@@ -1,17 +1,22 @@
 --- src/hotspot/os/solaris/decoder_solaris.cpp.orig	Tue Apr 14 19:31:07 2020
 +++ src/hotspot/os/solaris/decoder_solaris.cpp	Tue Apr 14 20:07:38 2020
-@@ -22,11 +22,24 @@
+@@ -22,11 +22,34 @@
   *
   */
  
++#ifdef __GNUC__
 +#include "jvm.h"
++#endif
  #include "utilities/decoder_elf.hpp"
  
--#include <demangle.h>
++#ifdef __GNUC__
 +#include <cxxabi.h>
++#else
+ #include <demangle.h>
++#endif
  
  bool ElfDecoder::demangle(const char* symbol, char *buf, int buflen) {
--  return !cplus_demangle(symbol, buf, (size_t)buflen);
++#ifdef __GNUC__
 +  int   status;
 +  char* result;
 +  size_t size = (size_t)buflen;
@@ -25,5 +30,8 @@
 +      return true;
 +  }
 +  return false;
++#else
+   return !cplus_demangle(symbol, buf, (size_t)buflen);
++#endif
  }
  

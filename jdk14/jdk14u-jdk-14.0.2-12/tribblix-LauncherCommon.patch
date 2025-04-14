@@ -5,7 +5,7 @@
            -DPROGNAME='"$1"' \
            $$($1_CFLAGS), \
 -      CFLAGS_solaris := -KPIC -DHAVE_GETHRTIME, \
-+      CFLAGS_solaris := -fPIC -DHAVE_GETHRTIME, \
++      CFLAGS_solaris := $$(PICFLAG) -DHAVE_GETHRTIME, \
        CFLAGS_windows := $$($1_CFLAGS_windows), \
        DISABLED_WARNINGS_gcc := unused-function, \
        LDFLAGS := $$(LDFLAGS_JDKEXE) \
