@@ -3,6 +3,11 @@ considerably modified. Cut from the jdk15 patches as of jdk15+32.
 
 See also README-zero.txt for note on a project zero variant.
 
+Cleanup: Duplicate check for SC_CLK_TCK.
+
+Cleanup: Remove more Studio-specific flags, still present in
+DTrace. This doesn't make DTrace build, but is one problem less.
+
 Cleanup: Remove the use of lp rather than lpr; all supported systems
 can or even should be using CUPS rather than legacy lp.
 

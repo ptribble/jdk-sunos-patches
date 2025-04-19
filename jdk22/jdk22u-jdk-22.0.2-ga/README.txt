@@ -5,6 +5,11 @@ See also README-zero.txt for note on a project zero variant.
 
 JDK 22 now switched to the jdk22 stabilisation repo
 
+Cleanup: Duplicate check for SC_CLK_TCK.
+
+Cleanup: Remove more Studio-specific flags, still present in
+DTrace. This doesn't make DTrace build, but is one problem less.
+
 Cleanup: Move the mapfiles (symbol files) to the right place.
 
 Cleanup: Remove the use of lp rather than lpr; all supported systems
