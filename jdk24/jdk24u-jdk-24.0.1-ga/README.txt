@@ -2,7 +2,9 @@ See also README-zero.txt for note on a project zero variant.
 
 JDK 24 now that jdk23 has been branched off.
 
-Cleanup: Enable dtrace probes and libjvm_dtrace.
+Cleanup: remove the unshuffle_list.txt hunk.
+
+Cleanup: Enable dtrace probes and libjvm_dtrace by default.
 
 Cleanup: unnecessary use of thread instead of pthread.
 
