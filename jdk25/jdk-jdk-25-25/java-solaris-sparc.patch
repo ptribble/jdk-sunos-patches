@@ -1039,7 +1039,7 @@
    tty->print_cr("class metadata.");
 --- old/src/hotspot/share/utilities/globalDefinitions_gcc.hpp	2020-05-20 18:00:44.978937412 -0700
 +++ new/src/hotspot/share/utilities/globalDefinitions_gcc.hpp	2020-05-20 18:00:44.586929885 -0700
-@@ -50,32 +50,15 @@
+@@ -50,28 +50,15 @@
  #endif
  #include <wchar.h>
  
@@ -1053,10 +1053,6 @@
  #include <dlfcn.h>
  #include <pthread.h>
  
--#ifdef SOLARIS
--#include <thread.h>
--#endif // SOLARIS
--
  #include <limits.h>
  #include <errno.h>
  
@@ -1072,7 +1068,7 @@
  #if defined(LINUX) || defined(_ALLBSD_SOURCE) || defined(_AIX)
  #include <signal.h>
  #ifndef __OpenBSD__
-@@ -92,38 +71,8 @@
+@@ -88,38 +71,8 @@
  #include <sys/time.h>
  #endif // LINUX || _ALLBSD_SOURCE
  
