@@ -4,7 +4,7 @@ we need to.
 
 --- a/src/hotspot/share/adlc/adlc.hpp	2024-09-26 10:47:32.000000000 +0200
 +++ b/src/hotspot/share/adlc/adlc.hpp	2025-02-10 17:12:03.693540148 +0100
-@@ -70,6 +70,10 @@
+@@ -69,6 +69,10 @@
    #include <inttypes.h>
  #endif // LINUX || _ALLBSD_SOURCE
  
