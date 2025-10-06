@@ -35,3 +35,4 @@
 -p1 jdk-jdk-26-7/testsuite.patch
 -p1 jdk-jdk-26-7/illumos-port-29.patch
 -p1 jdk-jdk-26-7/fastdebug.patch
+-p1 jdk-jdk-26-7/illumos-vmatree.patch

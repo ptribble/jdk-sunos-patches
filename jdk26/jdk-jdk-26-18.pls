@@ -35,3 +35,4 @@
 -p1 jdk-jdk-26-18/illumos-port-29.patch
 -p1 jdk-jdk-26-18/fastdebug.patch
 -p1 jdk-jdk-26-18/fix-new-dtags.patch
+-p1 jdk-jdk-26-18/illumos-vmatree.patch
