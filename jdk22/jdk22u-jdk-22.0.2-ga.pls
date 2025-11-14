@@ -40,3 +40,4 @@
 -p1 jdk22u-jdk-22.0.2-ga/jvmci-os.patch
 -p1 jdk22u-jdk-22.0.2-ga/testsuite.patch
 -p1 jdk22u-jdk-22.0.2-ga/fastdebug.patch
+-p1 jdk22u-jdk-22.0.2-ga/xattrs.patch

@@ -36,3 +36,4 @@
 -p1 jdk-jdk-26-24/fastdebug.patch
 -p1 jdk-jdk-26-24/fix-new-dtags.patch
 -p1 jdk-jdk-26-24/illumos-vmatree.patch
+-p1 jdk-jdk-26-24/xattrs.patch

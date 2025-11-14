@@ -35,3 +35,4 @@
 -p1 jdk25u-jdk-25.0.1-ga/testsuite.patch
 -p1 jdk25u-jdk-25.0.1-ga/illumos-port-29.patch
 -p1 jdk25u-jdk-25.0.1-ga/fastdebug.patch
+-p1 jdk25u-jdk-25.0.1-ga/xattrs.patch

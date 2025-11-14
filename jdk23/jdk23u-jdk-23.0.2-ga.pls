@@ -37,3 +37,4 @@
 -p1 jdk23u-jdk-23.0.2-ga/jvmci-os.patch
 -p1 jdk23u-jdk-23.0.2-ga/testsuite.patch
 -p1 jdk23u-jdk-23.0.2-ga/fastdebug.patch
+-p1 jdk23u-jdk-23.0.2-ga/xattrs.patch
