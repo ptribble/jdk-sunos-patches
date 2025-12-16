@@ -1,5 +1,7 @@
 JDK 27 now that jdk26 has been branched off.
 
+Cleanup: Fix AtomicAccess so tests build.
+
 27+0
 
 Start with no changes from 26+27. (Still reports as 26.)
