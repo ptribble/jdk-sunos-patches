@@ -10903,7 +10903,7 @@ diff -ur --new-file a/src/hotspot/cpu/sparc/c1_globals_sparc.hpp b/src/hotspot/c
 diff -ur --new-file a/src/hotspot/cpu/sparc/c2_MacroAssembler_sparc.cpp b/src/hotspot/cpu/sparc/c2_MacroAssembler_sparc.cpp
 --- a/src/hotspot/cpu/sparc/c2_MacroAssembler_sparc.cpp	1970-01-01 01:00:00.000000000 +0000
 +++ b/src/hotspot/cpu/sparc/c2_MacroAssembler_sparc.cpp	2023-04-16 11:42:11.060229698 +0000
-@@ -0,0 +1,527 @@
+@@ -0,0 +1,427 @@
 +/*
 + * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -11331,110 +11331,10 @@ diff -ur --new-file a/src/hotspot/cpu/sparc/c2_MacroAssembler_sparc.cpp b/src/ho
 +  bind(Ldone);
 +}
 +
-+void C2_MacroAssembler::has_negatives(Register inp, Register size, Register result, Register t2, Register t3, Register t4, Register t5) {
-+
-+  // test for negative bytes in input string of a given size
-+  // result 1 if found, 0 otherwise.
-+
-+  Label Lcore, Ltail, Lreturn, Lcore_rpt;
-+
-+  assert_different_registers(inp, size, t2, t3, t4, t5, result);
-+
-+  Register i     = result;  // result used as integer index i until very end
-+  Register lmask = t2;      // t2 is aliased to lmask
-+
-+  // INITIALIZATION
-+  // ===========================================================
-+  // initialize highbits mask -> lmask = 0x8080808080808080  (8B/64b)
-+  // compute unaligned offset -> i
-+  // compute core end index   -> t5
-+  Assembler::sethi(0x80808000, t2);   //! sethi macro fails to emit optimal
-+  add(t2, 0x80, t2);
-+  sllx(t2, 32, t3);
-+  or3(t3, t2, lmask);                 // 0x8080808080808080 -> lmask
-+  sra(size,0,size);
-+  andcc(inp, 0x7, i);                 // unaligned offset -> i
-+  br(Assembler::zero, true, Assembler::pn, Lcore); // starts 8B aligned?
-+  delayed()->add(size, -8, t5);       // (annulled) core end index -> t5
-+
-+  // ===========================================================
-+
-+  // UNALIGNED HEAD
-+  // ===========================================================
-+  // * unaligned head handling: grab aligned 8B containing unaligned inp(ut)
-+  // * obliterate (ignore) bytes outside string by shifting off reg ends
-+  // * compare with bitmask, short circuit return true if one or more high
-+  //   bits set.
-+  cmp(size, 0);
-+  br(Assembler::zero, true, Assembler::pn, Lreturn); // short-circuit?
-+  delayed()->mov(0,result);      // annulled so i not clobbered for following
-+  neg(i, t4);
-+  add(i, size, t5);
-+  ldx(inp, t4, t3);  // raw aligned 8B containing unaligned head -> t3
-+  mov(8, t4);
-+  sub(t4, t5, t4);
-+  sra(t4, 31, t5);
-+  andn(t4, t5, t5);
-+  add(i, t5, t4);
-+  sll(t5, 3, t5);
-+  sll(t4, 3, t4);   // # bits to shift right, left -> t5,t4
-+  srlx(t3, t5, t3);
-+  sllx(t3, t4, t3); // bytes outside string in 8B header obliterated -> t3
-+  andcc(lmask, t3, G0);
-+  brx(Assembler::notZero, true, Assembler::pn, Lreturn); // short circuit?
-+  delayed()->mov(1,result);      // annulled so i not clobbered for following
-+  add(size, -8, t5);             // core end index -> t5
-+  mov(8, t4);
-+  sub(t4, i, i);                 // # bytes examined in unalgn head (<8) -> i
-+  // ===========================================================
-+
-+  // ALIGNED CORE
-+  // ===========================================================
-+  // * iterate index i over aligned 8B sections of core, comparing with
-+  //   bitmask, short circuit return true if one or more high bits set
-+  // t5 contains core end index/loop limit which is the index
-+  //     of the MSB of last (unaligned) 8B fully contained in the string.
-+  // inp   contains address of first byte in string/array
-+  // lmask contains 8B high bit mask for comparison
-+  // i     contains next index to be processed (adr. inp+i is on 8B boundary)
-+  bind(Lcore);
-+  cmp_and_br_short(i, t5, Assembler::greater, Assembler::pn, Ltail);
-+  bind(Lcore_rpt);
-+  ldx(inp, i, t3);
-+  andcc(t3, lmask, G0);
-+  brx(Assembler::notZero, true, Assembler::pn, Lreturn);
-+  delayed()->mov(1, result);    // annulled so i not clobbered for following
-+  add(i, 8, i);
-+  cmp_and_br_short(i, t5, Assembler::lessEqual, Assembler::pn, Lcore_rpt);
-+  // ===========================================================
-+
-+  // ALIGNED TAIL (<8B)
-+  // ===========================================================
-+  // handle aligned tail of 7B or less as complete 8B, obliterating end of
-+  // string bytes by shifting them off end, compare what's left with bitmask
-+  // inp   contains address of first byte in string/array
-+  // lmask contains 8B high bit mask for comparison
-+  // i     contains next index to be processed (adr. inp+i is on 8B boundary)
-+  bind(Ltail);
-+  subcc(size, i, t4);   // # of remaining bytes in string -> t4
-+  // return 0 if no more remaining bytes
-+  br(Assembler::lessEqual, true, Assembler::pn, Lreturn);
-+  delayed()->mov(0, result); // annulled so i not clobbered for following
-+  ldx(inp, i, t3);       // load final 8B (aligned) containing tail -> t3
-+  mov(8, t5);
-+  sub(t5, t4, t4);
-+  mov(0, result);        // ** i clobbered at this point
-+  sll(t4, 3, t4);        // bits beyond end of string          -> t4
-+  srlx(t3, t4, t3);      // bytes beyond end now obliterated   -> t3
-+  andcc(lmask, t3, G0);
-+  movcc(Assembler::notZero, false, xcc,  1, result);
-+  bind(Lreturn);
-+}
-+
 diff -ur --new-file a/src/hotspot/cpu/sparc/c2_MacroAssembler_sparc.hpp b/src/hotspot/cpu/sparc/c2_MacroAssembler_sparc.hpp
 --- a/src/hotspot/cpu/sparc/c2_MacroAssembler_sparc.hpp	1970-01-01 01:00:00.000000000 +0000
 +++ b/src/hotspot/cpu/sparc/c2_MacroAssembler_sparc.hpp	2023-04-16 11:42:11.060337196 +0000
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,54 @@
 +/*
 + * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -11487,10 +11387,6 @@ diff -ur --new-file a/src/hotspot/cpu/sparc/c2_MacroAssembler_sparc.hpp b/src/ho
 +
 +  void array_equals(bool is_array_equ, Register ary1, Register ary2,
 +                    Register limit, Register tmp, Register result, bool is_byte);
-+  // test for negative bytes in input string of a given size, result 0 if none
-+  void has_negatives(Register inp, Register size, Register result,
-+                     Register t2, Register t3, Register t4,
-+                     Register t5);
 +
 +#endif // CPU_SPARC_C2_MACROASSEMBLER_SPARC_HPP
 diff -ur --new-file a/src/hotspot/cpu/sparc/c2_globals_sparc.hpp b/src/hotspot/cpu/sparc/c2_globals_sparc.hpp
@@ -13128,7 +13024,7 @@ diff -ur --new-file a/src/hotspot/cpu/sparc/frame_sparc.hpp b/src/hotspot/cpu/sp
 diff -ur --new-file a/src/hotspot/cpu/sparc/frame_sparc.inline.hpp b/src/hotspot/cpu/sparc/frame_sparc.inline.hpp
 --- a/src/hotspot/cpu/sparc/frame_sparc.inline.hpp	1970-01-01 01:00:00.000000000 +0000
 +++ b/src/hotspot/cpu/sparc/frame_sparc.inline.hpp	2023-04-16 11:42:11.061858702 +0000
-@@ -0,0 +1,190 @@
+@@ -0,0 +1,195 @@
 +/*
 + * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -13196,6 +13092,11 @@ diff -ur --new-file a/src/hotspot/cpu/sparc/frame_sparc.inline.hpp b/src/hotspot
 +inline int frame::frame_size(RegisterMap* map) const { return sender_sp() - sp(); }
 +
 +inline intptr_t* frame::link() const { return (intptr_t *)(fp()[FP->sp_offset_in_saved_window()] + STACK_BIAS); }
++
++//TODO do we need to wrap with is_readable_pointer() on sparc?
++inline intptr_t* frame::link_or_null() const {
++  return link();
++}
 +
 +inline intptr_t* frame::unextended_sp() const { return sp() + _sp_adjustment_by_callee; }
 +
@@ -31041,7 +30942,7 @@ diff -ur --new-file a/src/hotspot/cpu/sparc/sharedRuntime_sparc.cpp b/src/hotspo
 diff -ur --new-file a/src/hotspot/cpu/sparc/sparc.ad b/src/hotspot/cpu/sparc/sparc.ad
 --- a/src/hotspot/cpu/sparc/sparc.ad	1970-01-01 01:00:00.000000000 +0000
 +++ b/src/hotspot/cpu/sparc/sparc.ad	2023-04-16 11:42:11.074882766 +0000
-@@ -0,0 +1,10805 @@
+@@ -0,0 +1,10789 @@
 +//
 +// Copyright (c) 1998, 2020, Oracle and/or its affiliates. All rights reserved.
 +// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -41019,22 +40920,6 @@ diff -ur --new-file a/src/hotspot/cpu/sparc/sparc.ad b/src/hotspot/cpu/sparc/spa
 +    __ array_equals(true, $ary1$$Register, $ary2$$Register,
 +                    $tmp1$$Register, $tmp2$$Register,
 +                    $result$$Register, false /* byte */);
-+  %}
-+  ins_pipe(long_memory_op);
-+%}
-+
-+instruct has_negatives(o0RegP pAryR, g3RegI iSizeR, notemp_iRegI resultR,
-+                       iRegL tmp1L, iRegL tmp2L, iRegL tmp3L, iRegL tmp4L,
-+                       flagsReg ccr)
-+%{
-+  match(Set resultR (HasNegatives pAryR iSizeR));
-+  effect(TEMP resultR, TEMP tmp1L, TEMP tmp2L, TEMP tmp3L, TEMP tmp4L, USE pAryR, USE iSizeR, KILL ccr);
-+  format %{ "has negatives byte[] $pAryR,$iSizeR -> $resultR // KILL $tmp1L,$tmp2L,$tmp3L,$tmp4L" %}
-+  ins_encode %{
-+    __ has_negatives($pAryR$$Register, $iSizeR$$Register,
-+                     $resultR$$Register,
-+                     $tmp1L$$Register, $tmp2L$$Register,
-+                     $tmp3L$$Register, $tmp4L$$Register);
 +  %}
 +  ins_pipe(long_memory_op);
 +%}
