@@ -838,7 +838,7 @@ diff -ur jdk-jdk-15-26/src/java.desktop/share/native/libmlib_image/mlib_ImageCon
  #define STORE_RES(res, x)                                       \
    x >>= shift2;                                                 \
    CLAMP_STORE(res, x)
-@@ -1343,4 +1349,6 @@
+@@ -1345,4 +1349,6 @@
    return MLIB_SUCCESS;
  }
  
