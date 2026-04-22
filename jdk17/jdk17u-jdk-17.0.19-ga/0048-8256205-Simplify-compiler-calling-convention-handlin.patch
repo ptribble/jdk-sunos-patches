@@ -52,7 +52,7 @@ diff --git a/src/hotspot/cpu/aarch64/aarch64.ad b/src/hotspot/cpu/aarch64/aarch6
 index a9df812c634..2ec3d26ac81 100644
 --- a/src/hotspot/cpu/aarch64/aarch64.ad
 +++ b/src/hotspot/cpu/aarch64/aarch64.ad
-@@ -4035,13 +4035,6 @@ frame %{
+@@ -4045,13 +4045,6 @@ frame %{
    // Stack alignment requirement
    stack_alignment(StackAlignmentInBytes); // Alignment size in bytes (128-bit -> 16 bytes)
  
@@ -66,7 +66,7 @@ index a9df812c634..2ec3d26ac81 100644
    // Number of outgoing stack slots killed above the out_preserve_stack_slots
    // for calls to C.  Supports the var-args backing area for register parms.
    varargs_C_out_slots_killed(frame::arg_reg_save_area_bytes/BytesPerInt);
-@@ -4060,25 +4053,6 @@ frame %{
+@@ -4070,25 +4063,6 @@ frame %{
                          Compile::current()->fixed_slots()),
                         stack_alignment_in_slots()));
  
