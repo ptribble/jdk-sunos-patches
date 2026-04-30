@@ -568,7 +568,7 @@ diff -N -ur a/src/hotspot/os_cpu/linux_sparc/os_linux_sparc.cpp b/src/hotspot/os
 +
 +  const ucontext_t* uc = (const ucontext_t*)context;
 +
-+  address sp = (address)os::Solaris::ucontext_get_sp(uc);
++  address sp = (address)os::Linux::ucontext_get_sp(uc);
 +  print_tos(st, sp);
 +  st->cr();
 +
