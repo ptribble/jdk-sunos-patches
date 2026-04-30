@@ -337,7 +337,7 @@ diff -N -ur a/src/hotspot/os_cpu/linux_sparc/orderAccess_linux_sparc.hpp b/src/h
 diff -N -ur a/src/hotspot/os_cpu/linux_sparc/os_linux_sparc.cpp b/src/hotspot/os_cpu/linux_sparc/os_linux_sparc.cpp
 --- a/src/hotspot/os_cpu/linux_sparc/os_linux_sparc.cpp	1970-01-01 01:00:00.000000000 +0100
 +++ b/src/hotspot/os_cpu/linux_sparc/os_linux_sparc.cpp	2024-06-12 12:43:09.886146597 +0100
-@@ -0,0 +1,559 @@
+@@ -0,0 +1,555 @@
 +/*
 + * Copyright (c) 1999, 2020, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -773,10 +773,6 @@ diff -N -ur a/src/hotspot/os_cpu/linux_sparc/os_linux_sparc.cpp b/src/hotspot/os
 +  if (info != NULL && uc != NULL && thread != NULL) {
 +    pc = address(SIG_PC((sigcontext *)uc));
 +    npc = address(SIG_NPC((sigcontext *)uc));
-+
-+    if (checkZombie((sigcontext *)uc, pc)) {
-+      return 1;
-+    }
 +
 +    // Handle ALL stack overflow variations here
 +    if (sig == SIGSEGV) {
