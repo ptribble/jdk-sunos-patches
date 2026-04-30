@@ -1,0 +1,11 @@
+--- old/src/jdk.hotspot.agent/linux/native/libsaproc/libproc.h	2020-05-20 18:03:05.033626564 -0700
++++ new/src/jdk.hotspot.agent/linux/native/libsaproc/libproc.h	2020-05-20 18:03:04.697620112 -0700
+@@ -33,7 +33,7 @@
+ #include <sys/ptrace.h>
+ 
+ 
++#if defined(sparc) || defined(sparcv9) || defined(ppc64) || defined(ppc64le)
+-#if defined(ppc64) || defined(ppc64le)
+ #include <asm/ptrace.h>
+ #define user_regs_struct  pt_regs
+ #endif

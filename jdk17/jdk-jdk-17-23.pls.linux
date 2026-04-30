@@ -1,1 +1,2 @@
 -p1 jdk-jdk-17-23/restore_os_cpu_linux_sparc.patch
+-p1 jdk-jdk-17-23/linux-sparc-1.patch
