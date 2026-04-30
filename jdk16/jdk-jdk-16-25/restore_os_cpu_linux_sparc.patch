@@ -825,7 +825,7 @@ diff -N -ur a/src/hotspot/os_cpu/linux_sparc/os_linux_sparc.cpp b/src/hotspot/os
 +          break;
 +        }
 +
-+        if ((sig == SIGILL) && checkZombie((sigcontext *)uc, &pc, &stub)) {
++        if ((sig == SIGILL) && checkICMiss((sigcontext *)uc, &pc, &stub)) {
 +          break;
 +        }
 +
