@@ -8,6 +8,4 @@ aren't safe to apply on other systems.
 
 Changes in this release:
 
-No changes.
-
 Remove unused out_register_addr() and younger_sp_addr_at().

@@ -6,3 +6,5 @@ changed, and there's a corresponding scalar function; again we simply
 copy what looks like the default that s390 and ppc use.
 
 Also need to add sparc-stringopts.patch to fix a build failure.
+
+Remove unused out_register_addr() and younger_sp_addr_at().

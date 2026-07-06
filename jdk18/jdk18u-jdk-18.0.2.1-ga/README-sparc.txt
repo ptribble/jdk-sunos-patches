@@ -4,3 +4,5 @@ front of the initialization list for PICL(), as we get a warning
 
 Cleanup: in frame_sparc.cpp, moved _deopt_state up 1 in the
 initialization list for frame::frame to avoid the Wreoder warning.
+
+Remove unused out_register_addr() and younger_sp_addr_at().
