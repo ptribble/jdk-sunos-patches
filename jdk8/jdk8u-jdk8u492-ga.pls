@@ -60,3 +60,4 @@
 -p1 jdk8u-jdk8u492-ga/tribblix-sparc1.patch
 -p1 jdk8u-jdk8u492-ga/tribblix-sparc2.patch
 -p1 jdk8u-jdk8u492-ga/tribblix-sparc3.patch
+-p1 jdk8u-jdk8u492-ga/newer-gcc.patch
