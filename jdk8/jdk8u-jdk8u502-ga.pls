@@ -61,3 +61,4 @@
 -p1 jdk8u-jdk8u502-ga/tribblix-sparc2.patch
 -p1 jdk8u-jdk8u502-ga/tribblix-sparc3.patch
 -p1 jdk8u-jdk8u502-ga/newer-gcc.patch
+-p1 jdk8u-jdk8u502-ga/no_libm1_linking.patch
