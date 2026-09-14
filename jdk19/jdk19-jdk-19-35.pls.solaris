@@ -1,0 +1,2 @@
+-p0 jdk19-jdk-19-35/Solaris11-EM_486.patch
+-p1 jdk19-jdk-19-35/Solaris11-TRAPNO.patch
