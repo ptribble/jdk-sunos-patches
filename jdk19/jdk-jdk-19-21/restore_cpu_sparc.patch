@@ -22449,7 +22449,7 @@ diff -ur --new-file a/src/hotspot/cpu/sparc/macroAssembler_sparc.cpp b/src/hotsp
 diff -ur --new-file a/src/hotspot/cpu/sparc/macroAssembler_sparc.hpp b/src/hotspot/cpu/sparc/macroAssembler_sparc.hpp
 --- a/src/hotspot/cpu/sparc/macroAssembler_sparc.hpp	1970-01-01 01:00:00.000000000 +0000
 +++ b/src/hotspot/cpu/sparc/macroAssembler_sparc.hpp	2023-04-16 11:42:11.067751202 +0000
-@@ -0,0 +1,1305 @@
+@@ -0,0 +1,1306 @@
 +/*
 + * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -22478,6 +22478,7 @@ diff -ur --new-file a/src/hotspot/cpu/sparc/macroAssembler_sparc.hpp b/src/hotsp
 +#define CPU_SPARC_MACROASSEMBLER_SPARC_HPP
 +
 +#include "asm/assembler.hpp"
++#include "asm/register.hpp"
 +#include "utilities/macros.hpp"
 +
 +// <sys/trap.h> promises that the system will not use traps 16-31
@@ -54372,7 +54373,7 @@ diff -ur --new-file a/src/hotspot/cpu/sparc/vm_version_sparc.cpp b/src/hotspot/c
 diff -ur --new-file a/src/hotspot/cpu/sparc/vm_version_sparc.hpp b/src/hotspot/cpu/sparc/vm_version_sparc.hpp
 --- a/src/hotspot/cpu/sparc/vm_version_sparc.hpp	1970-01-01 01:00:00.000000000 +0000
 +++ b/src/hotspot/cpu/sparc/vm_version_sparc.hpp	2023-04-16 11:42:11.079839225 +0000
-@@ -0,0 +1,374 @@
+@@ -0,0 +1,375 @@
 +/*
 + * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -54400,6 +54401,7 @@ diff -ur --new-file a/src/hotspot/cpu/sparc/vm_version_sparc.hpp b/src/hotspot/c
 +#ifndef CPU_SPARC_VM_VERSION_SPARC_HPP
 +#define CPU_SPARC_VM_VERSION_SPARC_HPP
 +
++#include "register_sparc.hpp"
 +#include "runtime/abstract_vm_version.hpp"
 +#include "runtime/globals_extension.hpp"
 +
@@ -55401,3 +55403,161 @@ diff -ur -N a/src/hotspot/cpu/sparc/matcher_sparc.hpp b/src/hotspot/cpu/sparc/ma
 +
 +
 +#endif // CPU_SPARC_MATCHER_SPARC_HPP
+diff -ur --new-file a/src/hotspot/cpu/sparc/foreign_globals_sparc.cpp b/src/hotspot/cpu/sparc/foreign_globals_sparc.cpp
+--- a/src/hotspot/cpu/sparc/foreign_globals_sparc.cpp	1970-01-01 01:00:00.000000000 +0100
++++ b/src/hotspot/cpu/sparc/foreign_globals_sparc.cpp	2026-09-15 12:24:23.416693730 +0200
+@@ -0,0 +1,41 @@
++/*
++ * Copyright (c) 2020, Red Hat, Inc. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++#include "precompiled.hpp"
++#include "prims/foreign_globals.hpp"
++#include "utilities/debug.hpp"
++
++const ABIDescriptor ForeignGlobals::parse_abi_descriptor_impl(jobject jabi) const {
++  Unimplemented();
++  return {};
++}
++
++const BufferLayout ForeignGlobals::parse_buffer_layout_impl(jobject jlayout) const {
++  Unimplemented();
++  return {};
++}
++
++const CallRegs ForeignGlobals::parse_call_regs_impl(jobject jconv) const {
++  Unimplemented();
++  return {};
++}
+diff -ur --new-file a/src/hotspot/cpu/sparc/foreign_globals_sparc.hpp b/src/hotspot/cpu/sparc/foreign_globals_sparc.hpp
+--- a/src/hotspot/cpu/sparc/foreign_globals_sparc.hpp	1970-01-01 01:00:00.000000000 +0100
++++ b/src/hotspot/cpu/sparc/foreign_globals_sparc.hpp	2026-09-15 12:24:23.416971110 +0200
+@@ -0,0 +1,30 @@
++/*
++ * Copyright (c) 2020, Red Hat, Inc. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++#ifndef CPU_SPARC_VM_FOREIGN_GLOBALS_SPARC_HPP
++#define CPU_SPARC_VM_FOREIGN_GLOBALS_SPARC_HPP
++
++class BufferLayout {};
++class ABIDescriptor {};
++
++#endif // CPU_SPARC_VM_FOREIGN_GLOBALS_SPARC_HPP
+diff -ur --new-file a/src/hotspot/cpu/sparc/universalNativeInvoker_sparc.cpp b/src/hotspot/cpu/sparc/universalNativeInvoker_sparc.cpp
+--- a/src/hotspot/cpu/sparc/universalNativeInvoker_sparc.cpp	1970-01-01 01:00:00.000000000 +0100
++++ b/src/hotspot/cpu/sparc/universalNativeInvoker_sparc.cpp	2026-09-15 14:22:58.440859635 +0200
+@@ -0,0 +1,31 @@
++/*
++ * Copyright (c) 2020, Red Hat, Inc. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++#include "precompiled.hpp"
++#include "prims/universalNativeInvoker.hpp"
++#include "utilities/debug.hpp"
++
++address ProgrammableInvoker::generate_adapter(jobject jabi, jobject jlayout) {
++  Unimplemented();
++  return nullptr;
++}
+diff -ur --new-file a/src/hotspot/cpu/sparc/universalUpcallHandle_sparc.cpp b/src/hotspot/cpu/sparc/universalUpcallHandle_sparc.cpp
+--- a/src/hotspot/cpu/sparc/universalUpcallHandle_sparc.cpp	1970-01-01 01:00:00.000000000 +0100
++++ b/src/hotspot/cpu/sparc/universalUpcallHandle_sparc.cpp	2026-09-15 14:22:58.441010250 +0200
+@@ -0,0 +1,40 @@
++/*
++ * Copyright (c) 2020, Red Hat, Inc. All rights reserved.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++#include "precompiled.hpp"
++#include "prims/universalUpcallHandler.hpp"
++#include "utilities/debug.hpp"
++
++address ProgrammableUpcallHandler::generate_upcall_stub(jobject rec, jobject jabi, jobject jlayout) {
++  Unimplemented();
++  return nullptr;
++}
++
++address ProgrammableUpcallHandler::generate_optimized_upcall_stub(jobject mh, Method* entry, jobject jabi, jobject jconv) {
++  ShouldNotCallThis();
++  return nullptr;
++}
++
++bool ProgrammableUpcallHandler::supports_optimized_upcalls() {
++  return false;
++}

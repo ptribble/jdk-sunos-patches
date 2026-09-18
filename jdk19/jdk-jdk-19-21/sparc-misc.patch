@@ -3432,3 +3432,16 @@ diff -ur jdk-jdk-15-26/src/utils/hsdis/hsdis.c jdk-jdk-15-25/src/utils/hsdis/hsd
                      return Boolean.valueOf(success);
                  }
              };
+--- old/src/hotspot/share/precompiled/precompiled.hpp	Wed May  4 21:55:01 2022
++++ new/src/hotspot/share/precompiled/precompiled.hpp	Tue Sep 15 16:14:24 2026
+@@ -31,6 +31,10 @@
+ // measurements made in November 2018. This list excludes files named
+ // *.include.hpp, since including them decreased build performance.
+ 
++#ifdef __sparc
++#include "asm/register.hpp"
++#endif
++
+ #include "classfile/classLoaderData.hpp"
+ #include "classfile/javaClasses.hpp"
+ #include "classfile/systemDictionary.hpp"

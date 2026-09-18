@@ -27,3 +27,25 @@ The kludge used is to handle the _post_Java_sp == NULL case and return
 without making the stack walkable, flushing registers, or setting
 _last_java_pc. This relies on callers doing the right thing, and seems
 to work.
+
+A second phase of work was also added. This was to remove the backout
+of 8264868 which fiddled with the headers needed to get Register and
+RegisterMap. This was reverted because it broke the build.
+Unfortunately maintaining it through the upcoming changes in 19+22
+(the Loom integration) proved impracticable, so fixing it proved to be
+necessary. The issue you encounter is that Register isn't defined. The
+blunt instrument approach ending up being to add "asm/register.hpp" to
+precompiled.hpp, ensuring it gets included early enough to be
+useful. (The way a lot of the cpu etc headers work is that they're
+included by the main files, sometimes even in the middle or the end,
+so you can't fix it locally because it's too late.) This also required
+adding "register_sparc.hpp" to vm_version_sparc.hpp.
+
+Another interesting issue that this flagged was that the FFI
+integration didn't exist at all for sparc. It's unclear why this
+didn't break the build earlier. This required 4 shim files to be added
+  foreign_globals_sparc.cpp
+  foreign_globals_sparc.hpp
+  universalNativeInvoker_sparc.cpp
+  universalUpcallHandle_sparc.cpp
+which call Unimplemented(), just like s390.

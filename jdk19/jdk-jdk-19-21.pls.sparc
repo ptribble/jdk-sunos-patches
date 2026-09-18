@@ -10,7 +10,6 @@
 -p1 jdk-jdk-19-21/sparc-misc.patch
 -p1 jdk-jdk-19-21/assembler-hpp.patch
 -p1 jdk-jdk-19-21/8254231-for-sparc.patch
--p1+-R jdk-jdk-19-21/0001-8264868-Reduce-inclusion-of-registerMap.hpp-and-regi.patch
 -p1 jdk-jdk-19-21/sparc-linker.patch
 -p1 jdk-jdk-19-21/sparc-bitness.patch
 -p1 jdk-jdk-19-21/sparc-safefetch.patch
