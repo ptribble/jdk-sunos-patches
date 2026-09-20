@@ -86,7 +86,7 @@ diff -ur a/src/hotspot/share/c1/c1_LIR.hpp b/src/hotspot/share/c1/c1_LIR.hpp
    Label*        _label;
    BlockBegin*   _block;  // if this is a branch to a block, this is the block
    BlockBegin*   _ublock; // if this is a float-branch, this is the unordered block
-@@ -1702,19 +14703,21 @@
+@@ -1702,19 +1703,21 @@
    CodeStub*     _stub;   // if this is a branch to a stub, this is the stub
  
   public:
