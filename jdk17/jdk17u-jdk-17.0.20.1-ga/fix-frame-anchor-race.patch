@@ -1,0 +1,47 @@
+Fix SPARC JDK17 crash: guarantee(_post_Java_sp != NULL) failed: bad stack!
+
+On SPARC 64-bit, JavaFrameAnchor::capture_last_Java_pc() calls
+frame::next_younger_sp_or_null(last_Java_sp(), sp) and then hits
+a guarantee if the result is NULL:
+
+  guarantee(_post_Java_sp != NULL, "bad stack!")   // frame_sparc.cpp:694
+
+This guarantee fires during G1 GC root-scan / concurrent-mark-remark when
+a GC thread walks another thread's Java stack and that thread is mid-entry
+into a runtime stub (e.g., _new_instance_Java allocation slow path). The
+SPARC frame anchor is set up in two separate stores:
+
+  1. last_Java_sp is written (with STACK_BIAS, per generateOptoStub.cpp)
+  2. _post_Java_sp is written after the register window save completes
+
+If a G1 safepoint fires between these two stores, next_younger_sp_or_null
+returns NULL (the register windows haven't been saved yet, so the younger
+frame can't be located), and the guarantee crashes the VM.
+
+The fix replaces the guarantee with an early return: if _post_Java_sp is
+NULL the stack is not yet walkable, so we return without capturing the PC
+or marking windows as flushed. GC covers such threads via other root-scan
+paths (oops_do, nmethods_do) which don't require a fully-initialized frame
+anchor. This matches the analogous guard added to make_walkable() in jdk19.
+
+See: https://github.com/ptribble/jdk-sunos-builder/issues/7
+
+--- a/src/hotspot/cpu/sparc/frame_sparc.cpp
++++ b/src/hotspot/cpu/sparc/frame_sparc.cpp
+@@ -686,9 +686,13 @@ void JavaFrameAnchor::capture_last_Java_pc(intptr_t* sp) {
+   if (last_Java_sp() != NULL && last_Java_pc() == NULL) {
+     // try and find the sp just younger than _last_Java_sp
+     intptr_t* _post_Java_sp = frame::next_younger_sp_or_null(last_Java_sp(), sp);
+-    // Really this should never fail otherwise VM call must have non-standard
+-    // frame linkage (bad) or stack is not properly flushed (worse).
+-    guarantee(_post_Java_sp != NULL, "bad stack!");
++    // If _post_Java_sp is NULL the frame anchor is partially initialized:
++    // the thread is mid-entry into a runtime stub (last_Java_sp is set but
++    // the register window save and _post_Java_sp store have not completed).
++    // Return without capturing the PC or marking windows as flushed; GC
++    // covers this thread via other root-scan paths (oops_do etc.).
++    // Mirrors the analogous guard added to make_walkable() in jdk19.
++    if (_post_Java_sp == NULL) return;
+     _last_Java_pc = (address) _post_Java_sp[ I7->sp_offset_in_saved_window()] + frame::pc_return_offset;
+
+   }
