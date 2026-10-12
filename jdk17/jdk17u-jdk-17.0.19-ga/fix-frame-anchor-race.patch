@@ -7,22 +7,53 @@ a guarantee if the result is NULL:
   guarantee(_post_Java_sp != NULL, "bad stack!")   // frame_sparc.cpp:694
 
 This guarantee fires during G1 GC root-scan / concurrent-mark-remark when
-a GC thread walks another thread's Java stack and that thread is mid-entry
-into a runtime stub (e.g., _new_instance_Java allocation slow path). The
-SPARC frame anchor is set up in two separate stores:
+a GC worker thread walks another (mutator) thread's Java stack.
 
-  1. last_Java_sp is written (with STACK_BIAS, per generateOptoStub.cpp)
-  2. _post_Java_sp is written after the register window save completes
+Root cause: make_walkable()/capture_last_Java_pc() flush the *calling*
+thread's own register windows (via flush_callers_register_windows_func())
+and scan forward from the *calling* thread's own sp looking for a link
+back to the target thread's last_Java_sp. That is only a meaningful
+operation when a thread does it to itself (e.g. on its own safepoint
+self-block, or its own native-call transition) -- not when a GC worker
+calls it on a *different*, possibly still-running, JavaThread, which is
+exactly what JavaThread::oops_do_frames()/nmethods_do() do during root
+scanning. Called cross-thread, the scan walks the wrong stack entirely.
 
-If a G1 safepoint fires between these two stores, next_younger_sp_or_null
-returns NULL (the register windows haven't been saved yet, so the younger
-frame can't be located), and the guarantee crashes the VM.
+An initial version of this fix only replaced the guarantee with an early
+return (treating a NULL result as "stack not yet walkable, skip it").
+That is necessary but not sufficient: under sustained concurrent stress
+(many threads cycling through native calls + allocation) the cross-thread
+scan does not merely fail to find anything -- it can occasionally find a
+frame on the *wrong* stack that happens to satisfy
+next_younger_sp_or_null()'s sanity checks, producing a last_Java_pc()
+that does not correspond to last_Java_sp() at all. That silently corrupts
+later frame walks, observed as SIGSEGV or ShouldNotReachHere in
+frame::oops_do_internal() -- i.e. the guarantee was masking a worse,
+rarer failure mode, not just a narrow timing window.
 
-The fix replaces the guarantee with an early return: if _post_Java_sp is
-NULL the stack is not yet walkable, so we return without capturing the PC
-or marking windows as flushed. GC covers such threads via other root-scan
-paths (oops_do, nmethods_do) which don't require a fully-initialized frame
-anchor. This matches the analogous guard added to make_walkable() in jdk19.
+The complete fix has two parts:
+
+1. make_walkable() now refuses to perform the flush-and-scan when called
+   on behalf of a thread other than the caller itself. It leaves the
+   anchor exactly as its owning thread last set it. (capture_last_Java_pc()
+   keeps its early-return guard too, as defense in depth for the
+   legitimate self-service case: a thread's own safepoint-poll trap
+   handler invoking make_walkable() on itself while genuinely mid-entry
+   into a runtime stub.)
+
+2. JavaThread::oops_do_frames() and JavaThread::nmethods_do() -- the two
+   call sites that invoke make_walkable() cross-thread during GC root
+   scanning -- now check that last_Java_pc() is actually non-NULL after
+   calling make_walkable(), and skip walking this thread's frames if not.
+   Without this, StackFrameStream/last_frame() would proceed to build a
+   frame from a still-not-walkable (or, pre-fix, corrupted) anchor
+   regardless. Other root-scan paths (Thread::oops_do()) still cover such
+   threads, matching the existing comment's original intent.
+
+Verified with a sustained G1 stress harness (dozens of allocator threads
+plus NIO selector-loop threads cycling native calls under a small,
+frequently-collected heap) that previously reproduced the crash in under
+5 seconds; with this fix the same crash signature no longer reproduces.
 
 See: https://github.com/ptribble/jdk-sunos-builder/issues/7
 
@@ -44,4 +75,72 @@ See: https://github.com/ptribble/jdk-sunos-builder/issues/7
 +    if (_post_Java_sp == NULL) return;
      _last_Java_pc = (address) _post_Java_sp[ I7->sp_offset_in_saved_window()] + frame::pc_return_offset;
 
+   }
+@@ -697,6 +701,29 @@ void JavaFrameAnchor::capture_last_Java_pc(intptr_t* sp) {
+
+ void JavaFrameAnchor::make_walkable(JavaThread* thread) {
+   if (walkable()) return;
++  if (thread != Thread::current()) {
++    // flush_callers_register_windows_func() flushes the *calling* thread's
++    // own currently-held register windows, and capture_last_Java_pc()'s
++    // next_younger_sp_or_null() scan walks forward from the calling
++    // thread's own sp looking for a link back to last_Java_sp(). Both are
++    // only meaningful when "thread" is doing this to itself. Called
++    // cross-thread -- which is exactly what the G1 root-scan path
++    // (JavaThread::oops_do_frames()/nmethods_do(), called by a GC worker
++    // on a different, possibly still-running, JavaThread) does -- this
++    // flushes and scans the wrong stack. Usually that harmlessly finds
++    // nothing (last_Java_pc() stays NULL), but with enough concurrently
++    // running threads it can coincidentally find a frame that happens to
++    // satisfy next_younger_sp_or_null()'s sanity checks, producing a
++    // last_Java_pc() that does not correspond to last_Java_sp() at all.
++    // That corrupts later frame walks (observed as SIGSEGV or
++    // ShouldNotReachHere in frame::oops_do_internal()). Leave the anchor
++    // exactly as its owning thread last set it instead: callers already
++    // have to tolerate an anchor that is not yet walkable (e.g. the
++    // owning thread is mid-entry into a native allocation stub) and must
++    // skip this thread's frames in that case, relying on other root-scan
++    // paths to cover it.
++    return;
++  }
+   // We always flush in case the profiler wants it but we won't mark
+   // the windows as flushed unless we have a last_Java_frame
+   intptr_t* sp = StubRoutines::Sparc::flush_callers_register_windows_func()();
+--- a/src/hotspot/share/runtime/thread.cpp
++++ b/src/hotspot/share/runtime/thread.cpp
+@@ -1989,6 +1989,17 @@ void JavaThread::oops_do_frames(OopClosure* f, CodeBlobClosure* cf) {
+   if (!has_last_Java_frame()) {
+     return;
+   }
++  // On SPARC a thread can be caught at a safepoint while mid-entry into a
++  // native allocation stub, with last_Java_sp set but its register windows
++  // not yet flushed. In that window capture_last_Java_pc() (called from
++  // make_walkable() below) cannot determine a pc and leaves last_Java_pc()
++  // NULL; last_frame() would then build an unclassifiable frame and crash
++  // in frame::oops_do_internal(). Skip walking this thread's frames when
++  // that happens -- Thread::oops_do() still covers its roots.
++  frame_anchor()->make_walkable(this);
++  if (last_Java_pc() == NULL) {
++    return;
++  }
+   // Finish any pending lazy GC activity for the frames
+   StackWatermarkSet::finish_processing(this, NULL /* context */, StackWatermarkKind::gc);
+   // Traverse the execution stack
+@@ -2008,9 +2019,15 @@ void JavaThread::nmethods_do(CodeBlobClosure* cf) {
+   DEBUG_ONLY(verify_frame_info();)
+
+   if (has_last_Java_frame()) {
+-    // Traverse the execution stack
+-    for (StackFrameStream fst(this, true /* update */, true /* process_frames */); !fst.is_done(); fst.next()) {
+-      fst.current()->nmethods_do(cf);
++    // See the comment in oops_do_frames(): on SPARC, make_walkable() can
++    // leave last_Java_pc() NULL if this thread is mid-entry into a native
++    // allocation stub. Skip the frame walk in that case.
++    frame_anchor()->make_walkable(this);
++    if (last_Java_pc() != NULL) {
++      // Traverse the execution stack
++      for (StackFrameStream fst(this, true /* update */, true /* process_frames */); !fst.is_done(); fst.next()) {
++        fst.current()->nmethods_do(cf);
++      }
+     }
    }
