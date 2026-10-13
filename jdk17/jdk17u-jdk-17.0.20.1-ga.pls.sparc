@@ -20,3 +20,4 @@
 -p1 jdk17u-jdk-17.0.20.1-ga/sparc-noflatten.patch
 -p1 jdk17u-jdk-17.0.20.1-ga/fix-allocate_new_tlab-crash.patch
 -p1 jdk17u-jdk-17.0.20.1-ga/fix-frame-anchor-race.patch
+-p1 jdk17u-jdk-17.0.20.1-ga/fix-g1-barrier-missing-null-check.patch
