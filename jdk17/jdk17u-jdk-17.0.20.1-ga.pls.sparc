@@ -19,3 +19,5 @@
 -p1+-R jdk17u-jdk-17.0.20.1-ga/0001-8268702-JFR-diagnostic-commands-lack-argument-descri.patch
 -p1 jdk17u-jdk-17.0.20.1-ga/sparc-noflatten.patch
 -p1 jdk17u-jdk-17.0.20.1-ga/fix-allocate_new_tlab-crash.patch
+-p1 jdk17u-jdk-17.0.20.1-ga/fix-sparc-safepoint-poll-word.patch
+-p1 jdk17u-jdk-17.0.20.1-ga/fix-g1-barrier-missing-null-check.patch
