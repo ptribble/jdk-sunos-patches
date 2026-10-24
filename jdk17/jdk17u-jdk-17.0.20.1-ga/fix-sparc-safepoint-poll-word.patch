@@ -1,0 +1,36 @@
+diff --git a/src/hotspot/cpu/sparc/interp_masm_sparc.cpp b/src/hotspot/cpu/sparc/interp_masm_sparc.cpp
+--- a/src/hotspot/cpu/sparc/interp_masm_sparc.cpp
++++ b/src/hotspot/cpu/sparc/interp_masm_sparc.cpp
+@@ -276,7 +276,7 @@
+     Label no_safepoint;
+ 
+     if (tbl.value() != sfpt_tbl.value()) {
+-      ldx(Address(G2_thread, JavaThread::polling_page_offset()), G3_scratch, 0);
++      ldx(Address(G2_thread, JavaThread::polling_word_offset()), G3_scratch, 0);
+       // Armed page has poll_bit set, if poll bit is cleared just continue.
+       and3(G3_scratch, SafepointMechanism::poll_bit(), G3_scratch);
+ 
+diff --git a/src/hotspot/cpu/sparc/macroAssembler_sparc.cpp b/src/hotspot/cpu/sparc/macroAssembler_sparc.cpp
+--- a/src/hotspot/cpu/sparc/macroAssembler_sparc.cpp
++++ b/src/hotspot/cpu/sparc/macroAssembler_sparc.cpp
+@@ -237,7 +237,7 @@
+ }
+ 
+ void MacroAssembler::safepoint_poll(Label& slow_path, bool a, Register thread_reg, Register temp_reg) {
+-  ldx(Address(thread_reg, JavaThread::polling_page_offset()), temp_reg, 0);
++  ldx(Address(thread_reg, JavaThread::polling_word_offset()), temp_reg, 0);
+   // Armed page has poll bit set.
+   and3(temp_reg, SafepointMechanism::poll_bit(), temp_reg);
+   br_notnull(temp_reg, a, Assembler::pn, slow_path);
+diff --git a/src/hotspot/cpu/sparc/templateTable_sparc.cpp b/src/hotspot/cpu/sparc/templateTable_sparc.cpp
+--- a/src/hotspot/cpu/sparc/templateTable_sparc.cpp
++++ b/src/hotspot/cpu/sparc/templateTable_sparc.cpp
+@@ -2004,7 +2004,7 @@
+ 
+   if (_desc->bytecode() != Bytecodes::_return_register_finalizer) {
+     Label no_safepoint;
+-    __ ldx(Address(G2_thread, JavaThread::polling_page_offset()), G3_scratch, 0);
++    __ ldx(Address(G2_thread, JavaThread::polling_word_offset()), G3_scratch, 0);
+     __ btst(SafepointMechanism::poll_bit(), G3_scratch);
+     __ br(Assembler::zero, false, Assembler::pt, no_safepoint);
+     __ delayed()->nop();

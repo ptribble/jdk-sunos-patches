@@ -1,0 +1,43 @@
+The SPARC port of G1's post-write-barrier (g1_write_barrier_post) was
+missing a runtime null check that the x86 reference implementation has.
+
+x86's g1_write_barrier_post does:
+
+    cmpptr(new_val, NULL_WORD);
+    jcc(equal, done);
+
+before the region-crossing check. The SPARC port only had the
+compile-time check `if (new_val == G0) return;`, which catches the case
+where the JIT passes the G0 register literally as a compile-time-constant
+null, but says nothing about new_val's *runtime* contents when it is a
+real allocated register that happens to hold null at runtime (e.g. the
+result of a call that can return null). Without the equivalent runtime
+check, a region-crossing store of a runtime-null reference falls through
+and unnecessarily dirties and enqueues the card.
+
+This is a genuine, independently-correct divergence from the x86
+reference implementation. It was found and fixed while investigating
+unrelated SPARC/G1 stability issues (see DLPX-99668) and confirmed via
+soak testing to not be the cause of those crashes — it is being
+upstreamed regardless because it is a real bug.
+
+--- a/src/hotspot/cpu/sparc/gc/g1/g1BarrierSetAssembler_sparc.cpp
++++ b/src/hotspot/cpu/sparc/gc/g1/g1BarrierSetAssembler_sparc.cpp
+@@ -376,6 +376,17 @@
+
+   __ cmp_and_brx_short(tmp, G0, Assembler::equal, Assembler::pt, filtered);
+
++  // Crosses regions, storing NULL? The check above (`new_val == G0`) only
++  // catches a compile-time-constant null (the JIT passing the G0 register
++  // literally); it says nothing about new_val's *runtime* contents when it
++  // is a real allocated register that happens to hold null at runtime (e.g.
++  // storing the result of a call that can return null). x86's
++  // g1_write_barrier_post has an explicit runtime check for exactly this
++  // (`cmpptr(new_val, NULL_WORD); jcc(equal, done)`); this port was missing
++  // the equivalent, so a region-crossing store of a runtime-null reference
++  // would fall through and unnecessarily dirty+enqueue the card.
++  __ cmp_and_brx_short(new_val, G0, Assembler::equal, Assembler::pt, filtered);
++
+   // If the "store_addr" register is an "in" or "local" register, move it to
+   // a scratch reg so we can pass it as an argument.
+   bool use_scr = !(store_addr->is_global() || store_addr->is_out());
