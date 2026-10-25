@@ -58,3 +58,13 @@ esac
 #
 cp $(awk '{print $2}' "${OVER}.pls.solaris") "$NVER"
 sed "s:${OVER}:${NVER}:" "${OVER}.pls.solaris" > "${NVER}.pls.solaris"
+
+#
+# also roll the linux patch forward so it's not forgotten
+#
+if [ -f "${OVER}.pls.linux" ]; then
+    if [ ! -f "${NVER}.pls.linux" ]; then
+	cp $(awk '{print $2}' "${OVER}.pls.linux") "$NVER"
+        sed "s:${OVER}:${NVER}:" "${OVER}.pls.linux" > "${NVER}.pls.linux"
+    fi
+fi

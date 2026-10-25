@@ -58,3 +58,6 @@ fi
 if [ -f "${OVER}.pls.sparc" ]; then
     sed "s:${OVER}:${NVER}:" "${OVER}.pls.sparc" > "${NVER}.pls.sparc"
 fi
+if [ -f "${OVER}.pls.linux" ]; then
+    sed "s:${OVER}:${NVER}:" "${OVER}.pls.linux" > "${NVER}.pls.linux"
+fi

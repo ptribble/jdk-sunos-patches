@@ -17,6 +17,11 @@ copy-solaris-patches.sh
 The extra patches for Solaris aren't present in the build repo, so this
 will copy them from one tag to the next.
 
+copy-linux-patches.sh
+
+The extra patches for Linux aren't present in the build repo, so this
+will copy them from one tag to the next.
+
 copy-tag.sh
 
 This copies the patches from one tag to another, which handles any cases
