@@ -14,3 +14,4 @@
 -p1 jdk-jdk-19-21/sparc-bitness.patch
 -p1 jdk-jdk-19-21/sparc-safefetch.patch
 -p1 jdk-jdk-19-21/sparc-stringopts.patch
+-p1 jdk-jdk-19-21/sparc-make-walkable.patch

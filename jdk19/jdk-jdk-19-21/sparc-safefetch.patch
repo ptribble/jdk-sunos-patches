@@ -1,6 +1,6 @@
 --- /dev/null	Fri Apr 22 12:35:21 2022
 +++ a/src/hotspot/os_cpu/solaris_sparc/safefetch_solaris_sparc.S	Fri Apr 22 12:29:28 2022
-@@ -0,0 +1,52 @@
+@@ -0,0 +1,54 @@
 +#
 +# Copyright (c) 2026 Peter Tribble
 +# Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
@@ -38,8 +38,9 @@
 +    .type    SafeFetch32_impl,#function
 +SafeFetch32_impl:
 +_SafeFetch32_fault:
++    ldsw [%o0], %o0
 +    retl
-+    ld [%o0], %o0
++    nop
 +_SafeFetch32_continuation:
 +    retl
 +    mov %o1, %o0
@@ -48,8 +49,9 @@
 +    .type    SafeFetchN_impl,#function
 +SafeFetchN_impl:
 +_SafeFetchN_fault:
-+    retl
 +    ldx [%o0], %o0
++    retl
++    nop
 +_SafeFetchN_continuation:
 +    retl
 +    mov %o1, %o0
