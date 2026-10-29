@@ -1,0 +1,4 @@
+-p1 jdk19u-jdk-19.0.2-ga/restore_os_cpu_linux_sparc.patch
+-p1 jdk19u-jdk-19.0.2-ga/linux-sparc-1.patch
+-p1 jdk19u-jdk-19.0.2-ga/8354941-uabs.patch
+-p1 jdk19u-jdk-19.0.2-ga/linux-sparc-19u.patch

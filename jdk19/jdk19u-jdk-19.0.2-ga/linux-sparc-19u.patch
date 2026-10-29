@@ -1,0 +1,21 @@
+diff --git a/src/hotspot/os_cpu/linux_sparc/os_linux_sparc.cpp b/src/hotspot/os_cpu/linux_sparc/os_linux_sparc.cpp
+index 2b871b639..cdcdd562b 100644
+--- a/src/hotspot/os_cpu/linux_sparc/os_linux_sparc.cpp
++++ b/src/hotspot/os_cpu/linux_sparc/os_linux_sparc.cpp
+@@ -221,8 +221,15 @@ void os::print_context(outputStream *st, const void *context) {
+                SIG_NPC(sc));
+   st->cr();
+   st->cr();
++}
++
++void os::print_tos_pc(outputStream *st, const void *context) {
++  if (context == NULL) return;
+ 
+-  st->print_cr("Top of Stack: (sp=" INTPTR_FORMAT ")", (intptr_t)sp);
++  const ucontext_t* uc = (const ucontext_t*)context;
++
++  intptr_t *sp = (intptr_t *)os::Linux::ucontext_get_sp(uc);
++  st->print_cr("Top of Stack: (sp=" PTR_FORMAT ")", p2i(sp));
+   print_hex_dump(st, (address)sp, (address)(sp + 32), sizeof(intptr_t));
+   st->cr();
+ 
