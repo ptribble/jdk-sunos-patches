@@ -1,0 +1,104 @@
+JDK 28 now that jdk27 has been branched off.
+
+28+22
+
+Trivial patch noise.
+
+28+21
+
+Minor patch noise, incl cleanup of NET_EnableFastTcpLoopback()
+
+Sync up zgc changes.
+
+28+20
+
+Minor patch noise.
+
+28+19
+
+No changes.
+
+28+18
+
+Boot jdk bumped to jdk27.
+
+28+17
+
+Trivial patch noise.
+
+28+16
+
+Minor patch noise.
+
+Replace STATIC_ASSERT with static_assert.
+
+Copy the 28+14 tweak to zero, even though it's commented out there.
+
+28+15
+
+No changes
+
+28+14
+
+Minor change to solaris_x86.cpp matching all other os_cpu variants.
+
+28+13
+
+Minor patch noise.
+
+28+12
+
+No changes
+
+28+11
+
+Trivial patch noise.
+
+Cleanup: defaultPath() no longer includes SUNWspro.
+
+28+10
+
+Minor patch noise
+
+28+9
+
+Trivial patch noise.
+
+28+8
+
+Minor patch noise (windows build flags)
+
+28+7
+
+Trivial patch noise.
+
+28+6
+
+Patch noise due to rework of timezone handling.
+
+28+2, 28+3, 28+4, 28+5
+
+Trivial patch noise.
+
+28+1
+
+No changes.
+
+28+0
+
+Start with no changes from 27+25. (Still reports as 27.)
+
+Build:
+
+env PATH=/usr/bin:/usr/sbin:/usr/sfw/bin:/usr/gnu/bin bash ./configure \
+--enable-unlimited-crypto --with-boot-jdk=/usr/jdk/instances/jdk27 \
+--with-native-debug-symbols=none \
+--with-toolchain-type=gcc \
+--disable-warnings-as-errors \
+--with-source-date=current \
+--with-jobs=4 \
+DATE=/usr/gnu/bin/date \
+LOCALE=/bin/true \
+STRIP=/usr/gnu/bin/strip
+
+env PATH=/usr/bin:/usr/sbin:/usr/sfw/bin:/usr/gnu/bin gmake product-images
