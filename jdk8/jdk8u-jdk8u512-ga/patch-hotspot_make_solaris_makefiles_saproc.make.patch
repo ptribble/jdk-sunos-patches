@@ -1,0 +1,15 @@
+
+Don't use Studio demangle
+
+diff -wpruN '--exclude=*.orig' a~/hotspot/make/solaris/makefiles/saproc.make a/hotspot/make/solaris/makefiles/saproc.make
+--- a~/hotspot/make/solaris/makefiles/saproc.make	1970-01-01 00:00:00
++++ a/hotspot/make/solaris/makefiles/saproc.make	1970-01-01 00:00:00
+@@ -107,7 +107,7 @@ $(LIBSAPROC): $(SASRCFILES) $(SADISOBJ)
+ 	           $(SADISOBJ)                                          \
+ 	           $(SA_LFLAGS)                                         \
+ 	           -o $@                                                \
+-	           -ldl -ldemangle -lthread -lc
++	           -ldl -lthread -lc
+ 
+ $(SADISOBJ): $(SADISSRCFILES)
+ 	           $(QUIETLY) $(CC)                                     \

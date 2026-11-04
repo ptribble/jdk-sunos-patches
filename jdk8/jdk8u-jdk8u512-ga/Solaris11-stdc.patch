@@ -1,0 +1,15 @@
+Static linking on Solaris doesn't work, especially as
+libstdc++ is only shipped shared
+
+--- a/hotspot/make/solaris/makefiles/gcc.make	Sat Jul 25 20:27:02 2026
++++ b/hotspot/make/solaris/makefiles/gcc.make	Wed Aug 12 10:07:01 2026
+@@ -178,7 +178,8 @@
+ # Linker flags
+ 
+ # statically link libstdc++.so, work with gcc but ignored by g++
+-STATIC_STDCXX = -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
++# there is no libstdc++.a shipped on Solaris
++STATIC_STDCXX = -lstdc++
+ 
+ # statically link libgcc and/or libgcc_s, libgcc does not exist before gcc-3.x.
+ ifneq ("${CC_VER_MAJOR}", "2")
